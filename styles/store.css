@@ -37,9 +37,9 @@ button{font-family:inherit}
 .pill{display:inline-flex;align-items:center;gap:6px;border:0;border-radius:999px;padding:8px 14px;font-weight:700;font-size:12.5px;cursor:pointer;text-decoration:none;white-space:nowrap}
 .pill.soft{background:#E9EDF8;color:var(--ink)}
 .pill.wa{background:var(--cyan);color:var(--cyan-ink)}
-.cartbtn{position:relative;border:0;background:transparent;cursor:pointer;padding:6px;color:var(--ink)}
+.cartbtn{position:relative;display:inline-flex;align-items:center;gap:6px;border:0;background:transparent;cursor:pointer;padding:6px;color:var(--ink);font:inherit;font-weight:700;font-size:12.5px}
 .cartbtn .badge{position:absolute;top:-2px;right:-4px;background:var(--pink);color:#fff;font-size:10px;font-weight:800;border-radius:999px;min-width:18px;height:18px;display:grid;place-items:center;padding:0 4px}
-@media (max-width:860px){.head .wrap{flex-wrap:wrap}.search{order:3;flex-basis:100%;max-width:none}.pill .lbl{display:none}.hd-actions{margin-left:auto}}
+@media (max-width:860px){.head .wrap{flex-wrap:wrap}.search{order:3;flex-basis:100%;max-width:none}.pill .lbl,.cartbtn .lbl{display:none}.hd-actions{margin-left:auto}}
 
 /* navegación */
 .nav{background:var(--soft);border-bottom:1px solid var(--line)}

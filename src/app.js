@@ -170,7 +170,9 @@ function orderText(items, totals){
   const lines = items.map(i=>`• ${i.qty} × ${i.name}${i.detail?` (${i.detail})`:""} — ${money(i.qty*i.unit)}`);
   return `Hola ${CONFIG.name}, quiero hacer este pedido:\n${lines.join("\n")}\n\nSubtotal: ${money(totals.sub)}`+
     (totals.off?`\nDescuento por volumen (${Math.round(totals.off*100)}%): -${money(totals.discount)}`:"")+
-    `\nTotal: ${money(totals.total)}\n\nEnviaré mis diseños por este chat.`;
+    `\nTotal a pagar: ${money(totals.total)}`+
+    (CONFIG.payments?`\n\nMedios de pago: ${CONFIG.payments}`:"")+
+    `\n\nEnviaré mis diseños por este chat.`;
 }
 
 /*@include art.js*/
@@ -231,7 +233,7 @@ function Header({query,setQuery}){
     <div class="hd-actions">
       <a class="pill soft" href="#cotizador">${Icon.calc}<span class="lbl">Cotizador</span></a>
       <a class="pill wa" href=${waLink("Hola, quiero información sobre sus productos personalizados.")} target="_blank" rel="noopener">${Icon.chat}<span class="lbl">WhatsApp</span></a>
-      <button class="cartbtn" onClick=${()=>setOpen(true)} aria-label=${`Abrir carrito, ${totals.units} productos`}>${Icon.bag}${totals.units>0 && html`<span class="badge">${totals.units}</span>`}</button>
+      <button class="cartbtn" onClick=${()=>setOpen(true)} aria-label=${`Abrir carrito, ${totals.units} productos`}>${Icon.bag}<span class="lbl">${totals.units>0?money(totals.total):"Carrito"}</span>${totals.units>0 && html`<span class="badge">${totals.units}</span>`}</button>
     </div>
   </div></header>`;
 }
@@ -321,7 +323,7 @@ function ProductCard({p, onOpen}){
     <div class="ph">${(p.tag||p.discount>0) && html`<span class="ribbon">${p.discount>0 && html`<span class="tag off">−${p.discount}%</span>`}${p.tag && html`<span class="tag pink">${p.tag}</span>`}</span>`}<${ProductMedia} p=${p}/></div>
     <div class="body"><h3>${p.name}</h3><p>${p.desc}</p>
       <div class="cfoot"><${Price} p=${p}/>
-        ${p.sim ? html`<a class="btn primary" href=${"#"+simRoute(p)}>Diseñar en 3D</a>` : html`<button class="btn primary" onClick=${()=>onOpen(p)}>Personalizar</button>`}</div></div>
+        ${p.sim ? html`<a class="btn primary" href=${"#"+simRoute(p)}>Diseñar en 3D</a>` : html`<button class="btn primary" onClick=${()=>onOpen(p)}>Ordenar</button>`}</div></div>
   </article>`;
 }
 function ProductGrid({items, onOpen}){
@@ -384,9 +386,9 @@ function CartDrawer(){
         <div class="ln"><span>Subtotal (${totals.units} u.)</span><span>${money(totals.sub)}</span></div>
         ${totals.off>0 && html`<div class="ln off"><span>Descuento por volumen ${Math.round(totals.off*100)}%</span><span>−${money(totals.discount)}</span></div>`}
         <div class="ln big"><span>Total</span><span>${money(totals.total)}</span></div>
-        <a class="btn wa block" href=${waLink(orderText(items,totals))} target="_blank" rel="noopener">${Icon.chat} Enviar pedido por WhatsApp</a>
+        <a class="btn wa block" href=${waLink(orderText(items,totals))} target="_blank" rel="noopener">${Icon.chat} Pagar · enviar pedido por WhatsApp</a>
         <button class="btn block" onClick=${()=>dispatch({type:"clear"})}>Vaciar carrito</button>
-        <div class="note-cfg">Se abre WhatsApp con tu pedido listo para enviar al ${CONFIG.whatsappLabel}.</div>
+        <div class="note-cfg">Se abre WhatsApp con el resumen de tu pedido y el total para coordinar el pago con ${CONFIG.whatsappLabel}.</div>
       </div>`}
     </aside></div>`;
 }
