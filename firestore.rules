@@ -6,7 +6,7 @@ service cloud.firestore {
     function esAdmin() {
       return request.auth != null
         && request.auth.token.email_verified == true
-        && request.auth.token.email in ['correo-eliminado'];
+        && request.auth.token.email in ['correo-eliminado', 'correo-eliminado'];
     }
 
     // Ajustes, categorías y carrusel: todos leen, solo administradores escriben

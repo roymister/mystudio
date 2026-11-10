@@ -818,7 +818,7 @@ window.FireStore = (function(){
     appId: "1:426507707884:web:635d15d6f0d75196614cc9"
   };
   // Correos con acceso al Panel del dueño (en minúsculas). Para agregar otro: "correo-eliminado"
-  const ADMIN_EMAILS = ["correo-eliminado"];
+  const ADMIN_EMAILS = ["correo-eliminado", "correo-eliminado"];
 
   if(!window.firebase || !firebase.initializeApp) return null;   // sin Firebase (p. ej. dentro de Claude): la tienda usa su modo anterior
   const app = firebase.apps.length ? firebase.app() : firebase.initializeApp(FIREBASE_CONFIG);
