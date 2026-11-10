@@ -1,0 +1,62 @@
+.sim .app{display:grid;gap:16px;max-width:1360px;margin:0 auto;grid-template-columns:1fr}
+@media (min-width:1000px){.sim .app{grid-template-columns:250px minmax(0,1fr) 300px}}
+.sim .panel{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:18px;display:flex;flex-direction:column;gap:14px;min-width:0}
+.sim h2{font-family:var(--f-display);font-weight:800;font-size:18px;margin:0;letter-spacing:-.01em}
+.sim .label{font-size:11px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}
+.sim .stage-wrap{display:flex;flex-direction:column;gap:10px;min-width:0}
+.sim .stage{position:relative;background:radial-gradient(ellipse at 50% 40%, var(--panel), var(--stage) 75%);border:1px solid var(--line);border-radius:14px;overflow:hidden;aspect-ratio:1/1;max-width:100%;max-height:78vh;width:100%}
+@media (min-width:1000px){.sim .stage{aspect-ratio:auto;height:min(72vh,700px)}}
+.sim .stage canvas{display:block;width:100%;height:100%;touch-action:none}
+.sim .stage.placing canvas{cursor:crosshair}
+.sim .hint{position:absolute;left:12px;bottom:12px;right:12px;font-size:12px;color:var(--muted);pointer-events:none;text-align:center}
+.sim .toolbar{display:flex;flex-wrap:wrap;gap:8px;justify-content:space-between}
+.sim .seg{display:inline-flex;background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:3px;gap:2px}
+.sim .seg button{border:0;background:transparent;color:var(--fg);font:500 13px var(--f-body);padding:7px 12px;border-radius:7px;cursor:pointer}
+.sim .seg button[aria-pressed="true"]{background:var(--accent);color:var(--accent-ink)}
+.sim button:focus-visible,.sim input:focus-visible,.sim label.upload:focus-within{outline:2px solid var(--magenta);outline-offset:2px}
+.sim .swatches{display:grid;grid-template-columns:repeat(5,1fr);gap:8px}
+@media (min-width:1000px){.sim .swatches{grid-template-columns:repeat(4,1fr)}}
+.sim .sw{aspect-ratio:1;border-radius:50%;border:1px solid var(--line);cursor:pointer;position:relative;padding:0;max-width:52px;width:100%;justify-self:center}
+.sim .sw[aria-pressed="true"]{box-shadow:0 0 0 2px var(--panel),0 0 0 4px var(--accent)}
+.sim .custom{display:flex;align-items:center;gap:10px}
+.sim .custom input[type=color]{width:44px;height:34px;border:1px solid var(--line);border-radius:8px;background:var(--panel);padding:2px;cursor:pointer}
+.sim .colorname{font-weight:600}
+.sim .trims{display:flex;flex-wrap:wrap;gap:8px}
+.sim .trims button{width:34px;height:34px;border-radius:8px;border:1px solid var(--line);cursor:pointer;padding:0;position:relative}
+.sim .trims button[aria-pressed="true"]{box-shadow:0 0 0 2px var(--panel),0 0 0 4px var(--accent)}
+.sim .patterns{display:grid;grid-template-columns:repeat(4,1fr);gap:6px}
+.sim .patterns button{border:1px solid var(--line);background:var(--bg);color:var(--fg);border-radius:8px;padding:3px 3px 4px;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:3px;font:500 10.5px var(--f-body);min-width:0}
+.sim .patterns button canvas{width:100%;aspect-ratio:1;border-radius:5px;display:block}
+.sim .patterns button span{max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.sim .patterns button[aria-pressed="true"]{border-color:var(--accent);box-shadow:0 0 0 1px var(--accent)}
+.sim .patopts{display:flex;flex-direction:column;gap:10px}
+.sim .rowlabel{display:flex;justify-content:space-between;font-size:13px;font-weight:500}
+.sim .rowlabel output{color:var(--muted);font-weight:400;font-variant-numeric:tabular-nums}
+.sim .trims button.same{background:linear-gradient(135deg,var(--bg) 50%,var(--line) 50%)}
+.sim .credit{max-width:1360px;margin:16px auto 0;font-size:12px;color:var(--muted)}
+.sim .credit a{color:inherit}
+.sim .warn{background:var(--warn-bg);color:var(--warn-fg);border-radius:10px;padding:10px 12px;font-size:12.5px}
+.sim .note{font-size:12.5px;color:var(--muted);margin:0}
+.sim .designs{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+.sim .dz{aspect-ratio:1;border:1px solid var(--line);border-radius:10px;background:var(--stage);cursor:pointer;padding:6px;display:flex;align-items:center;justify-content:center}
+.sim .dz:hover{border-color:var(--accent)}
+.sim .dz canvas{width:100%;height:100%;object-fit:contain}
+.sim .row{display:flex;gap:8px}
+.sim .row input[type=text]{flex:1;min-width:0;border:1px solid var(--line);background:var(--bg);color:var(--fg);border-radius:8px;padding:8px 10px;font:14px var(--f-body)}
+.sim .btn{border:1px solid var(--line);background:var(--bg);color:var(--fg);border-radius:8px;padding:8px 12px;font:600 13px var(--f-body);cursor:pointer;white-space:nowrap}
+.sim .btn.primary{background:var(--accent);color:var(--accent-ink);border-color:transparent}
+.sim .btn.danger{color:var(--magenta)}
+.sim label.upload{display:flex;align-items:center;justify-content:center;gap:8px;border:1.5px dashed var(--line);border-radius:10px;padding:12px;cursor:pointer;font-weight:600;color:var(--accent)}
+.sim label.upload input{position:absolute;opacity:0;width:1px;height:1px}
+.sim .layers{display:flex;flex-direction:column;gap:6px;list-style:none;margin:0;padding:0}
+.sim .layers li button{width:100%;display:flex;align-items:center;gap:10px;border:1px solid var(--line);background:var(--bg);color:var(--fg);border-radius:8px;padding:6px 8px;cursor:pointer;text-align:left;font:13px var(--f-body)}
+.sim .layers li button[aria-pressed="true"]{border-color:var(--accent);box-shadow:inset 3px 0 0 var(--accent)}
+.sim .layers img{width:30px;height:30px;object-fit:contain;background:var(--stage);border-radius:5px}
+.sim .layers small{color:var(--muted);display:block}
+.sim .empty{color:var(--muted);font-size:13px;margin:0}
+.sim .ctrl{display:flex;flex-direction:column;gap:10px;border-top:1px solid var(--line);padding-top:12px}
+.sim .ctrl label{display:flex;justify-content:space-between;font-size:13px;font-weight:500}
+.sim .ctrl output{font-variant-numeric:tabular-nums;color:var(--muted);font-weight:400}
+.sim input[type=range]{width:100%;accent-color:var(--accent)}
+@media (max-width:999px){.sim .stage-wrap{order:-1}}
+@media (prefers-reduced-motion:reduce){.sim *{transition:none!important}}

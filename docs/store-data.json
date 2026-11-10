@@ -1,0 +1,752 @@
+{
+ "version": 1,
+ "updatedAt": 1794336065520,
+ "settings": {
+  "name": "SubliPro",
+  "tagline": "STUDIO & PRINT",
+  "whatsapp": "51900000000",
+  "whatsappLabel": "+51 900 000 000",
+  "currency": "S/",
+  "bulk": [
+   {
+    "min": 12,
+    "off": 10
+   },
+   {
+    "min": 50,
+    "off": 20
+   },
+   {
+    "min": 100,
+    "off": 30
+   }
+  ],
+  "fullPrintExtra": 10,
+  "topbar": "Taller de estampado y sublimación · Más de 30 productos personalizables",
+  "about": "Taller de estampado y sublimación: ropa, tazas, accesorios, artículos de oficina y regalos personalizados para ti, tu empresa o tu evento.",
+  "payments": "Efectivo en taller, Yape / Plin, Transferencia"
+ },
+ "categories": [
+  {
+   "id": "ropa",
+   "name": "Ropa y Textiles",
+   "art": "tee",
+   "blurb": "Polos, camisetas, poleras, gorras y más",
+   "photo": "https://images.unsplash.com/photo-1620799140188-3b2a02fd9a77?auto=format&fit=crop&w=800&h=800&q=75"
+  },
+  {
+   "id": "bebidas",
+   "name": "Tazas y Bebidas",
+   "art": "mug",
+   "blurb": "Tazas, tomatodos, termos y vasos",
+   "photo": "https://images.unsplash.com/photo-1514228742587-6b1558fcca3d?auto=format&fit=crop&w=800&h=800&q=75"
+  },
+  {
+   "id": "accesorios",
+   "name": "Bolsos y Accesorios",
+   "art": "tote",
+   "blurb": "Tote bags, cartucheras, carcasas y placas para mascotas",
+   "photo": "https://images.unsplash.com/photo-1544816155-12df9643f363?auto=format&fit=crop&w=800&h=800&q=75"
+  },
+  {
+   "id": "oficina",
+   "name": "Oficina y Corporativo",
+   "art": "mousepad",
+   "blurb": "Desk mats, lanyards y libretas",
+   "photo": "https://images.unsplash.com/photo-1650394923482-a0d03ffb2512?auto=format&fit=crop&w=800&h=800&q=75"
+  },
+  {
+   "id": "regalos",
+   "name": "Regalos y Decoración",
+   "art": "pillow",
+   "blurb": "Cojines, llaveros, rompecabezas e imanes",
+   "photo": "https://images.unsplash.com/photo-1577189777960-799f0283d2c2?auto=format&fit=crop&w=800&h=800&q=75"
+  },
+  {
+   "id": "verano",
+   "name": "Verano",
+   "art": "sandal",
+   "blurb": "Sandalias, toallas de playa, bolsos y abanicos",
+   "photo": null
+  }
+ ],
+ "products": [
+  {
+   "id": "polos",
+   "cat": "ropa",
+   "name": "Polos de poliéster o tacto algodón",
+   "price": 35,
+   "discount": 0,
+   "desc": "Camisero o cuello redondo. Diséñalo en 3D y míralo en 360°.",
+   "tag": "Personalizador 3D",
+   "art": "polo",
+   "color": "#FFFFFF",
+   "inner": null,
+   "thermo": false,
+   "pattern": false,
+   "options": null,
+   "photo": null,
+   "featured": true,
+   "hidden": false,
+   "sim": "polo"
+  },
+  {
+   "id": "camiseta-dep",
+   "cat": "ropa",
+   "name": "Camisetas deportivas",
+   "price": 38,
+   "discount": 0,
+   "desc": "Dry-fit transpirable, ideal para equipos con nombre y número.",
+   "tag": "",
+   "art": "tee",
+   "color": "#1C2A4A",
+   "inner": null,
+   "thermo": false,
+   "pattern": true,
+   "options": {
+    "label": "Talla",
+    "values": [
+     "S",
+     "M",
+     "L",
+     "XL",
+     "XXL"
+    ]
+   },
+   "photo": "https://images.unsplash.com/photo-1764116679127-dc9d2c1138a7?auto=format&fit=crop&w=800&h=800&q=75",
+   "featured": false,
+   "hidden": false,
+   "sim": false
+  },
+  {
+   "id": "polera",
+   "cat": "ropa",
+   "name": "Poleras y buzos",
+   "price": 75,
+   "discount": 0,
+   "desc": "Felpa interior suave, capucha y bolsillo canguro.",
+   "tag": "",
+   "art": "hoodie",
+   "color": "#FFFFFF",
+   "inner": null,
+   "thermo": false,
+   "pattern": false,
+   "options": {
+    "label": "Talla",
+    "values": [
+     "S",
+     "M",
+     "L",
+     "XL",
+     "XXL"
+    ]
+   },
+   "photo": "https://images.unsplash.com/photo-1556821840-3a63f95609a7?auto=format&fit=crop&w=800&h=800&q=75",
+   "featured": false,
+   "hidden": false,
+   "sim": false
+  },
+  {
+   "id": "casaca",
+   "cat": "ropa",
+   "name": "Casacas cortavientos",
+   "price": 85,
+   "discount": 0,
+   "desc": "Tela repelente, cierre completo y forro de malla.",
+   "tag": "",
+   "art": "jacket",
+   "color": "#E9EDF5",
+   "inner": null,
+   "thermo": false,
+   "pattern": false,
+   "options": {
+    "label": "Talla",
+    "values": [
+     "S",
+     "M",
+     "L",
+     "XL",
+     "XXL"
+    ]
+   },
+   "photo": "https://images.unsplash.com/photo-1622567893612-a5345baa5c9a?auto=format&fit=crop&w=800&h=800&q=75",
+   "featured": false,
+   "hidden": false,
+   "sim": false
+  },
+  {
+   "id": "gorra",
+   "cat": "ropa",
+   "name": "Gorras",
+   "price": 22,
+   "discount": 0,
+   "desc": "Frente sublimable y malla posterior con broche regulable.",
+   "tag": "Más vendido",
+   "art": "cap",
+   "color": "#FFFFFF",
+   "inner": null,
+   "thermo": false,
+   "pattern": false,
+   "options": null,
+   "photo": "https://images.unsplash.com/photo-1691256676359-20e5c6d4bc92?auto=format&fit=crop&w=800&h=800&q=75",
+   "featured": true,
+   "hidden": false,
+   "sim": false
+  },
+  {
+   "id": "medias",
+   "cat": "ropa",
+   "name": "Medias sublimables",
+   "price": 15,
+   "discount": 0,
+   "desc": "Diseño en toda la caña, tallas niño y adulto.",
+   "tag": "",
+   "art": "socks",
+   "color": "#FFFFFF",
+   "inner": null,
+   "thermo": false,
+   "pattern": false,
+   "options": {
+    "label": "Talla",
+    "values": [
+     "Niño",
+     "Adulto"
+    ]
+   },
+   "photo": "https://images.unsplash.com/photo-1676030788770-448aa27b481f?auto=format&fit=crop&w=800&h=800&q=75",
+   "featured": false,
+   "hidden": false,
+   "sim": false
+  },
+  {
+   "id": "mandil",
+   "cat": "ropa",
+   "name": "Mandiles",
+   "price": 28,
+   "discount": 0,
+   "desc": "Cintas regulables y bolsillo frontal.",
+   "tag": "",
+   "art": "apron",
+   "color": "#FFFFFF",
+   "inner": null,
+   "thermo": false,
+   "pattern": false,
+   "options": null,
+   "photo": "https://images.unsplash.com/photo-1523226609443-a669cd4d067d?auto=format&fit=crop&w=800&h=800&q=75",
+   "featured": false,
+   "hidden": false,
+   "sim": false
+  },
+  {
+   "id": "toalla",
+   "cat": "ropa",
+   "name": "Toallas deportivas",
+   "price": 30,
+   "discount": 0,
+   "desc": "Microfibra de secado rápido, 40 × 80 cm.",
+   "tag": "",
+   "art": "towel",
+   "color": "#FFFFFF",
+   "inner": null,
+   "thermo": false,
+   "pattern": false,
+   "options": null,
+   "photo": "https://images.unsplash.com/photo-1533739093852-1bcc50897807?auto=format&fit=crop&w=800&h=800&q=75",
+   "featured": false,
+   "hidden": false,
+   "sim": false
+  },
+  {
+   "id": "taza-blanca",
+   "cat": "bebidas",
+   "name": "Tazas blancas de 11 oz",
+   "price": 18,
+   "discount": 0,
+   "desc": "Cerámica AAA, apta para microondas.",
+   "tag": "Personalizador 3D",
+   "art": "mug",
+   "color": "#FFFFFF",
+   "inner": null,
+   "thermo": false,
+   "pattern": false,
+   "options": {
+    "label": "Acabado",
+    "values": [
+     "Brillante",
+     "Mate"
+    ]
+   },
+   "photo": null,
+   "featured": true,
+   "hidden": false,
+   "sim": "taza"
+  },
+  {
+   "id": "taza-magica",
+   "cat": "bebidas",
+   "name": "Tazas mágicas",
+   "price": 28,
+   "discount": 0,
+   "desc": "Negra en frío; con bebida caliente aparece tu diseño.",
+   "tag": "",
+   "art": "mug",
+   "color": "#1B2232",
+   "inner": null,
+   "thermo": false,
+   "pattern": false,
+   "options": null,
+   "photo": "https://images.unsplash.com/photo-1608623848923-6a001a18551d?auto=format&fit=crop&w=800&h=800&q=75",
+   "featured": false,
+   "hidden": false,
+   "sim": false
+  },
+  {
+   "id": "tomatodo",
+   "cat": "bebidas",
+   "name": "Tomatodos de aluminio",
+   "price": 30,
+   "discount": 0,
+   "desc": "600 ml con tapa y mosquetón.",
+   "tag": "Ideal eventos",
+   "art": "bottle",
+   "color": "#FFFFFF",
+   "inner": null,
+   "thermo": false,
+   "pattern": false,
+   "options": null,
+   "photo": "https://images.unsplash.com/photo-1642505172169-b2041b39a57e?auto=format&fit=crop&w=800&h=800&q=75",
+   "featured": true,
+   "hidden": false,
+   "sim": false
+  },
+  {
+   "id": "termo",
+   "cat": "bebidas",
+   "name": "Termos de acero inoxidable",
+   "price": 45,
+   "discount": 0,
+   "desc": "Doble pared: frío 24 h, caliente 12 h.",
+   "tag": "",
+   "art": "bottle",
+   "color": "#E9EDF5",
+   "inner": null,
+   "thermo": true,
+   "pattern": false,
+   "options": null,
+   "photo": "https://images.unsplash.com/photo-1767525804740-e141f0be2614?auto=format&fit=crop&w=800&h=800&q=75",
+   "featured": false,
+   "hidden": false,
+   "sim": false
+  },
+  {
+   "id": "vaso-cerv",
+   "cat": "bebidas",
+   "name": "Vasos cerveceros",
+   "price": 20,
+   "discount": 0,
+   "desc": "Vaso de vidrio tipo pint, 16 oz.",
+   "tag": "",
+   "art": "glass",
+   "color": "#FFFFFF",
+   "inner": null,
+   "thermo": false,
+   "pattern": false,
+   "options": null,
+   "photo": "https://images.unsplash.com/photo-1618183479302-1e0aa382c36b?auto=format&fit=crop&w=800&h=800&q=75",
+   "featured": false,
+   "hidden": false,
+   "sim": false
+  },
+  {
+   "id": "tote",
+   "cat": "accesorios",
+   "name": "Bolsas de tela",
+   "price": 18,
+   "discount": 0,
+   "desc": "Asas largas, 38 × 42 cm.",
+   "tag": "",
+   "art": "tote",
+   "color": "#F3EBDD",
+   "inner": null,
+   "thermo": false,
+   "pattern": false,
+   "options": null,
+   "photo": "https://images.unsplash.com/photo-1544816155-12df9643f363?auto=format&fit=crop&w=800&h=800&q=75",
+   "featured": false,
+   "hidden": false,
+   "sim": false
+  },
+  {
+   "id": "cartuchera",
+   "cat": "accesorios",
+   "name": "Cartucheras",
+   "price": 18,
+   "discount": 0,
+   "desc": "Neopreno acolchado con cierre.",
+   "tag": "",
+   "art": "pencil",
+   "color": "#FFFFFF",
+   "inner": null,
+   "thermo": false,
+   "pattern": false,
+   "options": null,
+   "photo": null,
+   "featured": false,
+   "hidden": false,
+   "sim": false
+  },
+  {
+   "id": "carcasa",
+   "cat": "accesorios",
+   "name": "Carcasas para celular",
+   "price": 35,
+   "discount": 0,
+   "desc": "Con lámina sublimable de aluminio.",
+   "tag": "Nuevo",
+   "art": "case",
+   "color": "#FFFFFF",
+   "inner": null,
+   "thermo": false,
+   "pattern": false,
+   "options": {
+    "label": "Marca",
+    "values": [
+     "iPhone",
+     "Samsung",
+     "Xiaomi",
+     "Motorola",
+     "Otro (indicar)"
+    ]
+   },
+   "photo": "https://images.unsplash.com/photo-1535157412991-2ef801c1748b?auto=format&fit=crop&w=800&h=800&q=75",
+   "featured": true,
+   "hidden": false,
+   "sim": false
+  },
+  {
+   "id": "placa-mascota",
+   "cat": "accesorios",
+   "name": "Placas de identificación para mascotas",
+   "price": 15,
+   "discount": 0,
+   "desc": "Aluminio con nombre y teléfono, incluye argolla.",
+   "tag": "",
+   "art": "pettag",
+   "color": "#FFFFFF",
+   "inner": null,
+   "thermo": false,
+   "pattern": false,
+   "options": null,
+   "photo": "https://images.unsplash.com/photo-1580129518863-f00fcf1d6e68?auto=format&fit=crop&w=800&h=800&q=75",
+   "featured": false,
+   "hidden": false,
+   "sim": false
+  },
+  {
+   "id": "deskmat",
+   "cat": "oficina",
+   "name": "Mousepads XL",
+   "price": 45,
+   "discount": 0,
+   "desc": "80 × 30 cm para teclado y mouse.",
+   "tag": "",
+   "art": "deskmat",
+   "color": "#FFFFFF",
+   "inner": null,
+   "thermo": false,
+   "pattern": false,
+   "options": null,
+   "photo": "https://images.unsplash.com/photo-1650394923482-a0d03ffb2512?auto=format&fit=crop&w=800&h=800&q=75",
+   "featured": true,
+   "hidden": false,
+   "sim": "mousepad"
+  },
+  {
+   "id": "lanyard",
+   "cat": "oficina",
+   "name": "Lanyards (cintas porta fotocheck)",
+   "price": 8,
+   "discount": 0,
+   "desc": "Cinta de 2 cm con gancho metálico.",
+   "tag": "",
+   "art": "lanyard",
+   "color": "#FFFFFF",
+   "inner": null,
+   "thermo": false,
+   "pattern": false,
+   "options": null,
+   "photo": null,
+   "featured": false,
+   "hidden": false,
+   "sim": false
+  },
+  {
+   "id": "libreta",
+   "cat": "oficina",
+   "name": "Libretas y agendas",
+   "price": 25,
+   "discount": 0,
+   "desc": "Tapa sublimada, anillado, A5.",
+   "tag": "",
+   "art": "notebook",
+   "color": "#FFFFFF",
+   "inner": null,
+   "thermo": false,
+   "pattern": false,
+   "options": {
+    "label": "Tipo",
+    "values": [
+     "Libreta",
+     "Agenda 2027"
+    ]
+   },
+   "photo": "https://images.unsplash.com/photo-1612367980327-7454a7276aa7?auto=format&fit=crop&w=800&h=800&q=75",
+   "featured": false,
+   "hidden": false,
+   "sim": false
+  },
+  {
+   "id": "cojin",
+   "cat": "regalos",
+   "name": "Cojines decorativos",
+   "price": 35,
+   "discount": 0,
+   "desc": "40 × 40 cm con relleno.",
+   "tag": "",
+   "art": "pillow",
+   "color": "#FFFFFF",
+   "inner": null,
+   "thermo": false,
+   "pattern": false,
+   "options": null,
+   "photo": "https://images.unsplash.com/photo-1577189777960-799f0283d2c2?auto=format&fit=crop&w=800&h=800&q=75",
+   "featured": true,
+   "hidden": false,
+   "sim": false
+  },
+  {
+   "id": "llavero",
+   "cat": "regalos",
+   "name": "Llaveros",
+   "price": 6,
+   "discount": 0,
+   "desc": "Doble cara, varias formas.",
+   "tag": "",
+   "art": "keychain",
+   "color": "#FFFFFF",
+   "inner": null,
+   "thermo": false,
+   "pattern": false,
+   "options": {
+    "label": "Material",
+    "values": [
+     "MDF",
+     "Polímero"
+    ]
+   },
+   "photo": "https://images.unsplash.com/photo-1727154085760-134cc942246e?auto=format&fit=crop&w=800&h=800&q=75",
+   "featured": false,
+   "hidden": false,
+   "sim": false
+  },
+  {
+   "id": "rompecabezas",
+   "cat": "regalos",
+   "name": "Rompecabezas de cartón",
+   "price": 22,
+   "discount": 0,
+   "desc": "A4 de 120 piezas con tu foto.",
+   "tag": "",
+   "art": "puzzle",
+   "color": "#FFFFFF",
+   "inner": null,
+   "thermo": false,
+   "pattern": false,
+   "options": null,
+   "photo": "https://images.unsplash.com/photo-1494059980473-813e73ee784b?auto=format&fit=crop&w=800&h=800&q=75",
+   "featured": false,
+   "hidden": false,
+   "sim": false
+  },
+  {
+   "id": "iman",
+   "cat": "regalos",
+   "name": "Imanes para refrigerador",
+   "price": 5,
+   "discount": 0,
+   "desc": "Flexibles de 7 × 7 cm.",
+   "tag": "",
+   "art": "magnet",
+   "color": "#FFFFFF",
+   "inner": null,
+   "thermo": false,
+   "pattern": false,
+   "options": null,
+   "photo": "https://images.unsplash.com/photo-1612565775767-97a9fffef857?auto=format&fit=crop&w=800&h=800&q=75",
+   "featured": false,
+   "hidden": false,
+   "sim": false
+  },
+  {
+   "id": "sandalias",
+   "cat": "verano",
+   "name": "Sandalias playeras",
+   "price": 30,
+   "discount": 0,
+   "desc": "Plantilla sublimada con tu diseño y tiras cómodas.",
+   "tag": "Nuevo",
+   "art": "sandal",
+   "color": "#FFFFFF",
+   "inner": null,
+   "thermo": false,
+   "pattern": false,
+   "options": {
+    "label": "Talla",
+    "values": [
+     "35-36",
+     "37-38",
+     "39-40",
+     "41-42",
+     "43-44"
+    ]
+   },
+   "photo": null,
+   "featured": true,
+   "hidden": false,
+   "sim": false
+  },
+  {
+   "id": "toalla-playa",
+   "cat": "verano",
+   "name": "Toallas de playa",
+   "price": 45,
+   "discount": 0,
+   "desc": "Microfibra suave y de secado rápido, impresión a todo color.",
+   "tag": "",
+   "art": "towel",
+   "color": "#FFFFFF",
+   "inner": null,
+   "thermo": false,
+   "pattern": false,
+   "options": {
+    "label": "Tamaño",
+    "values": [
+     "70 × 140 cm",
+     "90 × 170 cm"
+    ]
+   },
+   "photo": null,
+   "featured": false,
+   "hidden": false,
+   "sim": false
+  },
+  {
+   "id": "bolso-playa",
+   "cat": "verano",
+   "name": "Bolsos de playa",
+   "price": 30,
+   "discount": 0,
+   "desc": "Amplios y resistentes, con asas reforzadas.",
+   "tag": "",
+   "art": "tote",
+   "color": "#FFFFFF",
+   "inner": null,
+   "thermo": false,
+   "pattern": false,
+   "options": null,
+   "photo": null,
+   "featured": false,
+   "hidden": false,
+   "sim": false
+  },
+  {
+   "id": "abanico",
+   "cat": "verano",
+   "name": "Abanicos",
+   "price": 8,
+   "discount": 0,
+   "desc": "Perfectos para eventos, matrimonios y campañas de verano.",
+   "tag": "",
+   "art": "fan",
+   "color": "#FFFFFF",
+   "inner": null,
+   "thermo": false,
+   "pattern": false,
+   "options": null,
+   "photo": null,
+   "featured": false,
+   "hidden": false,
+   "sim": false
+  }
+ ],
+ "slides": [
+  {
+   "kicker": "Nuevo · Personalizador 3D",
+   "title": "Diseña tu polo y míralo en 360° antes de pedirlo",
+   "text": "Elige color, sube tu logo o aplica estampado en toda la tela. Lo que ves es lo que imprimimos.",
+   "cta": [
+    "Diseñar mi polo",
+    "polos"
+   ],
+   "cta2": [
+    "Ver ropa y textiles",
+    "ropa"
+   ],
+   "art": "polo",
+   "bg1": "#1E2638",
+   "bg2": "#2B2F7A",
+   "photo": null
+  },
+  {
+   "kicker": "Tazas y bebidas",
+   "title": "Tazas, termos y chops con tu diseño desde S/ 18",
+   "text": "Cerámica, vidrio pavonado y acero con colores vivos que resisten el lavado.",
+   "cta": [
+    "Diseñar mi taza en 3D",
+    "tazas-3d"
+   ],
+   "cta2": [
+    "Ver tazas y bebidas",
+    "bebidas"
+   ],
+   "art": "mug",
+   "bg1": "#1E2638",
+   "bg2": "#7A2450",
+   "photo": null
+  },
+  {
+   "kicker": "Oficina y corporativo",
+   "title": "Tu marca en mousepads, lanyards y libretas",
+   "text": "Merchandising para tu equipo y tus clientes, con hasta 30% OFF por volumen.",
+   "cta": [
+    "Ver oficina",
+    "oficina"
+   ],
+   "cta2": [
+    "Abrir cotizador",
+    "cotizador"
+   ],
+   "art": "deskmat",
+   "bg1": "#1E2638",
+   "bg2": "#0F5C70",
+   "photo": null
+  },
+  {
+   "kicker": "Regalos y decoración",
+   "title": "Regalos que emocionan: cojines, rocas y rompecabezas",
+   "text": "Convierte tus fotos en recuerdos para cumpleaños, aniversarios y fechas especiales.",
+   "cta": [
+    "Ver regalos",
+    "regalos"
+   ],
+   "cta2": [
+    "Ver catálogo",
+    "catalogo"
+   ],
+   "art": "pillow",
+   "bg1": "#1E2638",
+   "bg2": "#5B3A8C",
+   "photo": null
+  }
+ ]
+}

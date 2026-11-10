@@ -1,0 +1,60 @@
+<div class="app">
+  <section class="panel" aria-labelledby="h-color">
+    <h2 id="h-color">{{COLOR_TITLE}}</h2>
+    <div class="swatches" id="swatches"></div>
+    <div class="custom">
+      <input type="color" id="customColor" value="#ffffff" aria-label="Color personalizado">
+      <div><div class="label">Seleccionado</div><div class="colorname" id="colorName">Blanco</div></div>
+    </div>
+    <div class="warn" id="warn" hidden>{{WARN}}</div>
+    <p class="note">{{NOTE}}</p>
+{{TRIMS}}
+    <div class="label">{{FULL_TITLE}}</div>
+    <div class="patterns" id="patterns"></div>
+    <div class="patopts" id="patOpts" hidden>
+      <div class="custom" id="patColorRow"><input type="color" id="patColor" value="#1c2a4a" aria-label="Color del estampado"><div><div class="label">Color del estampado</div><div class="note">{{PAT_NOTE}}</div></div></div>
+      <label for="patSize" class="rowlabel">Tamaño del estampado <output id="patSizeOut">16 cm</output></label>
+      <input type="range" id="patSize" min="6" max="40" step="1" value="16">
+    </div>
+    <label class="upload">Subir mi estampado<input type="file" id="patFile" accept="image/*"></label>
+  </section>
+
+  <section class="stage-wrap" aria-label="{{STAGE_LABEL}}">
+    <div class="toolbar">
+      <div class="seg" role="group" aria-label="Modo">
+        <button id="mGirar" aria-pressed="true">Girar</button>
+        <button id="mColocar" aria-pressed="false">Colocar diseño</button>
+      </div>
+      <div class="seg" role="group" aria-label="Vistas">
+        <button data-view="0">Frente</button>
+        <button data-view="180">Espalda</button>
+        <button data-view="-90">Der.</button>
+        <button data-view="90">Izq.</button>
+        <button id="auto" aria-pressed="false">Auto 360°</button>
+      </div>
+    </div>
+    <div class="stage" id="stage">
+      <div class="hint" id="hint">{{HINT}}</div>
+    </div>
+  </section>
+
+  <section class="panel" aria-labelledby="h-dis">
+    <h2 id="h-dis">Diseños</h2>
+    <div class="label">Toca uno para agregarlo</div>
+    <div class="designs" id="designs"></div>
+    <div class="row">
+      <input type="text" id="txt" value="TU NOMBRE" maxlength="24" aria-label="Texto para estampar">
+      <button class="btn" id="addTxt">Agregar texto</button>
+    </div>
+    <label class="upload">Subir mi imagen (PNG / JPG)<input type="file" id="file" accept="image/*"></label>
+    <div class="label">{{LAYERS_LABEL}}</div>
+    <ul class="layers" id="layers"></ul>
+    <div class="ctrl" id="ctrl" hidden>
+      <label for="size">Tamaño <output id="sizeOut"></output></label>
+      <input type="range" id="size" min="0.05" max="0.9" step="0.005">
+      <label for="rot">Rotación <output id="rotOut"></output></label>
+      <input type="range" id="rot" min="-180" max="180" step="1">
+      <div class="row"><button class="btn primary" id="move">{{MOVE}}</button><button class="btn danger" id="del">Eliminar</button></div>
+    </div>
+  </section>
+</div><p class="credit">{{CREDIT}}</p>
