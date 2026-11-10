@@ -318,3 +318,6 @@ input[type=color]{width:40px;height:32px;border:1px solid var(--line);border-rad
 .btn.google{background:#fff;border:1px solid #DADCE0;color:#3C4043;font-size:14px;padding:11px 16px;gap:10px;width:100%}
 .btn.google:hover{background:#F8F9FA}
 .gis-wrap{display:flex;justify-content:center;min-height:44px}
+.pay-field{gap:8px}.pay-field .chips{display:flex;flex-wrap:wrap;gap:8px}
+.pay-warn{color:var(--pink);font-weight:600}
+.btn.wa[aria-disabled="true"]{opacity:.55}

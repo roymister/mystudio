@@ -166,12 +166,13 @@ const fixedRoutes = ["inicio","catalogo","polos","tazas-3d","mousepads-3d","coti
 
 /* ---------- WhatsApp ---------- */
 const waLink = text => `https://wa.me/${(CONFIG.whatsapp||"").replace(/\D/g,"")}?text=${encodeURIComponent(text)}`;
-function orderText(items, totals){
+const PAY_METHODS = ["Yape", "Transferencia", "Efectivo en taller", "Contraentrega"];
+function orderText(items, totals, pay){
   const lines = items.map(i=>`• ${i.qty} × ${i.name}${i.detail?` (${i.detail})`:""} — ${money(i.qty*i.unit)}`);
   return `Hola ${CONFIG.name}, quiero hacer este pedido:\n${lines.join("\n")}\n\nSubtotal: ${money(totals.sub)}`+
     (totals.off?`\nDescuento por volumen (${Math.round(totals.off*100)}%): -${money(totals.discount)}`:"")+
     `\nTotal a pagar: ${money(totals.total)}`+
-    (CONFIG.payments?`\n\nMedios de pago: ${CONFIG.payments}`:"")+
+    (pay?`\nMedio de pago: ${pay}`:"")+
     `\n\nEnviaré mis diseños por este chat.`;
 }
 
@@ -366,6 +367,7 @@ function ProductModal({p, onClose}){
 /* ---------- Carrito ---------- */
 function CartDrawer(){
   const {items,dispatch,totals,open,setOpen} = useCart();
+  const [pay,setPay] = useState(null), [payWarn,setPayWarn] = useState(false);
   useEffect(()=>{ if(!open) return; const k=e=>{ if(e.key==="Escape") setOpen(false); }; addEventListener("keydown",k); return ()=>removeEventListener("keydown",k); },[open]);
   if(!open) return null;
   const next = [...CONFIG.bulk].sort((a,b)=>a.min-b.min).find(t=>totals.units<t.min);
@@ -386,7 +388,11 @@ function CartDrawer(){
         <div class="ln"><span>Subtotal (${totals.units} u.)</span><span>${money(totals.sub)}</span></div>
         ${totals.off>0 && html`<div class="ln off"><span>Descuento por volumen ${Math.round(totals.off*100)}%</span><span>−${money(totals.discount)}</span></div>`}
         <div class="ln big"><span>Total</span><span>${money(totals.total)}</span></div>
-        <a class="btn wa block" href=${waLink(orderText(items,totals))} target="_blank" rel="noopener">${Icon.chat} Pagar · enviar pedido por WhatsApp</a>
+        <div class="field pay-field">¿Cómo deseas pagar?
+          <div class="chips" role="group" aria-label="Medio de pago">${PAY_METHODS.map(m=>html`<button key=${m} aria-pressed=${pay===m} onClick=${()=>{ setPay(m); setPayWarn(false); }}>${m}</button>`)}</div>
+          ${payWarn && html`<small class="pay-warn" role="alert">Elige un medio de pago para continuar.</small>`}</div>
+        <a class="btn wa block" href=${pay?waLink(orderText(items,totals,pay)):"#"} target="_blank" rel="noopener" aria-disabled=${!pay}
+          onClick=${e=>{ if(!pay){ e.preventDefault(); setPayWarn(true); } }}>${Icon.chat} Pagar · enviar pedido por WhatsApp</a>
         <button class="btn block" onClick=${()=>dispatch({type:"clear"})}>Vaciar carrito</button>
         <div class="note-cfg">Se abre WhatsApp con el resumen de tu pedido y el total para coordinar el pago con ${CONFIG.whatsappLabel}.</div>
       </div>`}
