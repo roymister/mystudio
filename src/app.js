@@ -215,8 +215,9 @@ function TopBar({canEdit, onAdmin}){
   </div></div>`;
 }
 function Logo(){
-  const n=CONFIG.name||"", cut=Math.ceil(n.length*0.55);
-  return html`<a class="logo" href="#inicio" aria-label=${n+" inicio"}><b>${n.slice(0,cut)}<span>${n.slice(cut)}</span></b><small>${CONFIG.tagline}</small></a>`;
+  const n=CONFIG.name||"", sp=n.indexOf(" ");
+  // Primera palabra normal; el resto (desde el primer espacio) en color. Sin espacio: nombre entero sin color.
+  return html`<a class="logo" href="#inicio" aria-label=${n+" inicio"}><b>${sp<0?n:html`${n.slice(0,sp)}<span>${n.slice(sp)}</span>`}</b><small>${CONFIG.tagline}</small></a>`;
 }
 function Header({query,setQuery}){
   const {totals,setOpen} = useCart();

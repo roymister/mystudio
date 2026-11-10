@@ -42,7 +42,7 @@ for nombre, codigo in (("app", app), ("simulador", sim)):
     if re.search(r"</script", codigo.replace("</`+`script>", ""), re.I):
         raise SystemExit(f'{nombre} contiene "</script" literal: escríbelo como "</"+"script>"')
 
-page = ('<title>SubliPro Studio & Print</title><meta name="claude:viewport-fit-sides" content="cover">'
+page = ('<title>M&amp;Y Studio · Sublimación y personalizados</title><meta name="claude:viewport-fit-sides" content="cover">'
         '<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap">'
         f'<style id="css">{css}</style><div id="root"></div>'
         + "".join(f'<script data-cdn src="{u}"></script>' for u in CDN)
