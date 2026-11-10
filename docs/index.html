@@ -807,7 +807,7 @@ return {
 }};
 </script><script id="fb-src">/* ===== Firebase: inicio de sesión con Google + base de datos de la tienda =====
    - Clientes: leen la tienda (productos, categorías, carrusel, ajustes) desde Firestore.
-   - Administradores: inician sesión con Google; solo los correos de ADMIN_EMAILS pueden guardar.
+   - Administradores: inician sesión con Google; solo los usuarios de ADMIN_UIDS pueden guardar.
    La seguridad real está en las reglas de Firestore (archivo firestore.rules): mantén ambas listas iguales. */
 window.FireStore = (function(){
   const FIREBASE_CONFIG = {
@@ -818,8 +818,8 @@ window.FireStore = (function(){
     messagingSenderId: "426507707884",
     appId: "1:426507707884:web:635d15d6f0d75196614cc9"
   };
-  // Correos con acceso al Panel del dueño (en minúsculas). Para agregar otro: "correo-eliminado"
-  const ADMIN_EMAILS = ["correo-eliminado", "correo-eliminado"];
+  // Códigos de usuario (UID) con acceso al Panel del dueño. Se ven en Firebase → Authentication → Usuarios.
+  const ADMIN_UIDS = ["ZQQddGSrBZZCofKrCfzimC6lAqs1", "ZYBhNAJ4W8fix6zTGyDEXdXdNqs2"];
   // ID de cliente web de Google (Firebase → Authentication → Método de acceso → Google → Configuración del SDK web).
   // Con este ID el inicio de sesión funciona en celulares (Safari/Chrome móvil). Si queda así, se usa la ventana emergente.
   const GOOGLE_CLIENT_ID = "PEGA_AQUI_TU_ID_DE_CLIENTE_WEB.apps.googleusercontent.com";
@@ -829,7 +829,7 @@ window.FireStore = (function(){
   const auth = app.auth(), db = app.firestore();
   const CONFIG_DOC = "tienda/config", PRODUCTS = "productos";
 
-  const isAdmin = u => !!u && u.emailVerified !== false && ADMIN_EMAILS.includes((u.email||"").toLowerCase());
+  const isAdmin = u => !!u && ADMIN_UIDS.includes(u.uid);
   const clean = o => JSON.parse(JSON.stringify(o));   // Firestore no acepta undefined
 
   async function load(){
@@ -901,7 +901,7 @@ window.FireStore = (function(){
     signOut: () => { try{ window.google && google.accounts && google.accounts.id.disableAutoSelect(); }catch(e){} return auth.signOut(); },
     user: () => auth.currentUser,
     onAuth: cb => auth.onAuthStateChanged(u => cb(u, isAdmin(u))),
-    admins: ADMIN_EMAILS
+    admins: ADMIN_UIDS
   };
 })();
 </script><script id="app-src">/* ===== Tienda de sublimados · React 18 + htm (sin compilación) =====
