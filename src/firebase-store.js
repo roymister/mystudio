@@ -13,6 +13,9 @@ window.FireStore = (function(){
   };
   // Correos con acceso al Panel del dueño (en minúsculas). Para agregar otro: "correo-eliminado"
   const ADMIN_EMAILS = ["correo-eliminado", "correo-eliminado"];
+  // ID de cliente web de Google (Firebase → Authentication → Método de acceso → Google → Configuración del SDK web).
+  // Con este ID el inicio de sesión funciona en celulares (Safari/Chrome móvil). Si queda así, se usa la ventana emergente.
+  const GOOGLE_CLIENT_ID = "PEGA_AQUI_TU_ID_DE_CLIENTE_WEB.apps.googleusercontent.com";
 
   if(!window.firebase || !firebase.initializeApp) return null;   // sin Firebase (p. ej. dentro de Claude): la tienda usa su modo anterior
   const app = firebase.apps.length ? firebase.app() : firebase.initializeApp(FIREBASE_CONFIG);
@@ -59,9 +62,36 @@ window.FireStore = (function(){
     return r.user;
   }
 
+  /* Botón oficial de Google (Google Identity Services): entrega un token de Google y Firebase inicia sesión
+     con él, sin pasar por firebaseapp.com. Evita el error "missing initial state" en iPhone/Android. */
+  const hasGis = /^\d+-[\w]+\.apps\.googleusercontent\.com$/.test(GOOGLE_CLIENT_ID);
+  function loadGis(){
+    return window.__gis || (window.__gis = new Promise((res, rej) => {
+      if(window.google && google.accounts && google.accounts.id) return res();
+      const s = document.createElement("script"); s.src = "https://accounts.google.com/gsi/client"; s.async = true;
+      s.onload = () => res(); s.onerror = () => { window.__gis = null; rej({ code:"gis_load" }); };
+      document.head.appendChild(s);
+    }));
+  }
+  async function renderButton(el, onOk, onErr){
+    await loadGis();
+    google.accounts.id.initialize({
+      client_id: GOOGLE_CLIENT_ID, ux_mode: "popup", auto_select: false, cancel_on_tap_outside: true,
+      callback: async r => {
+        try{
+          const res = await auth.signInWithCredential(firebase.auth.GoogleAuthProvider.credential(r.credential));
+          if(!isAdmin(res.user)){ const email = res.user && res.user.email; await auth.signOut(); onErr({ code:"not_admin", email }); }
+          else onOk(res.user);
+        }catch(e){ onErr(e); }
+      }
+    });
+    el.innerHTML = "";
+    google.accounts.id.renderButton(el, { theme:"outline", size:"large", text:"signin_with", shape:"rectangular", locale:"es", width: Math.max(240, Math.min(400, el.clientWidth || 320)) });
+  }
+
   return {
-    load, publish, signIn, isAdmin,
-    signOut: () => auth.signOut(),
+    load, publish, signIn, isAdmin, hasGis, renderButton,
+    signOut: () => { try{ window.google && google.accounts && google.accounts.id.disableAutoSelect(); }catch(e){} return auth.signOut(); },
     user: () => auth.currentUser,
     onAuth: cb => auth.onAuthStateChanged(u => cb(u, isAdmin(u))),
     admins: ADMIN_EMAILS

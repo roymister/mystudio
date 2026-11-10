@@ -317,3 +317,4 @@ input[type=color]{width:40px;height:32px;border:1px solid var(--line);border-rad
 .modal.login{grid-template-columns:1fr;max-width:560px}
 .btn.google{background:#fff;border:1px solid #DADCE0;color:#3C4043;font-size:14px;padding:11px 16px;gap:10px;width:100%}
 .btn.google:hover{background:#F8F9FA}
+.gis-wrap{display:flex;justify-content:center;min-height:44px}

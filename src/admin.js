@@ -151,30 +151,51 @@ function SettingsTab({d, update}){
   </div>`;
 }
 
+// Navegadores internos de apps (WhatsApp, Instagram, Facebook…): Google no permite iniciar sesión ahí
+const IN_APP = /WhatsApp|Instagram|FBAN|FBAV|FB_IAB|Line\/|TikTok|; wv\)/i.test(navigator.userAgent);
+function loginError(x){
+  const c=x&&x.code;
+  return c==="not_admin"?`La cuenta ${x.email||""} no tiene permiso de administrador.`
+    :c==="auth/popup-closed-by-user"||c==="auth/cancelled-popup-request"?"Cerraste la ventana de Google antes de terminar."
+    :c==="auth/popup-blocked"?"El navegador bloqueó la ventana de Google. Permite ventanas emergentes para este sitio e inténtalo otra vez."
+    :c==="auth/unauthorized-domain"?"Este dominio no está autorizado en Firebase (Authentication → Configuración → Dominios autorizados)."
+    :c==="gis_load"?"No se pudo cargar el botón de Google. Revisa tu internet y recarga la página."
+    :"No se pudo iniciar sesión. Revisa tu internet e inténtalo de nuevo.";
+}
 function GoogleLogin({onClose, onOk}){
-  const inApp = /WhatsApp|Instagram|FBAN|FBAV|FB_IAB|Line\/|; wv\)/i.test(navigator.userAgent);
-  const [busy,setBusy]=useState(false), [err,setErr]=useState("");
-  const [copied,setCopied]=useState(false), [copyFail,setCopyFail]=useState(false);
-  const copy=async()=>{ try{ await navigator.clipboard.writeText(location.href); setCopied(true); setCopyFail(false); }catch(e){ setCopyFail(true); } };
-  const go=async()=>{ setBusy(true); setErr("");
-    try{ await FB.signIn(); onOk(); }
-    catch(x){ const c=x&&x.code;
-      setErr(c==="not_admin"?`La cuenta ${x.email||""} no tiene permiso de administrador.`
-        :c==="auth/popup-closed-by-user"||c==="auth/cancelled-popup-request"?"Cerraste la ventana de Google antes de terminar."
-        :c==="auth/popup-blocked"?"El navegador bloqueó la ventana de Google. Permite ventanas emergentes para este sitio e inténtalo otra vez."
-        :c==="auth/unauthorized-domain"?"Este dominio no está autorizado en Firebase (Authentication → Configuración → Dominios autorizados)."
-        :"No se pudo iniciar sesión. Revisa tu internet e inténtalo de nuevo."); }
-    setBusy(false); };
+  const [busy,setBusy]=useState(false), [err,setErr]=useState(""), [copied,setCopied]=useState(false);
+  const gisRef=useRef(null);
+  // Con ID de cliente: botón oficial de Google (funciona en celulares). Sin ID: ventana emergente de Firebase.
+  useEffect(()=>{ if(IN_APP || !FB.hasGis || !gisRef.current) return;
+    FB.renderButton(gisRef.current, ()=>onOk(), x=>setErr(loginError(x))).catch(x=>setErr(loginError(x))); },[]);
+  const go=async()=>{ setBusy(true); setErr(""); try{ await FB.signIn(); onOk(); }catch(x){ setErr(loginError(x)); } setBusy(false); };
+  const copy=async()=>{ try{ await navigator.clipboard.writeText(location.href); setCopied(true); }catch(e){ setCopied("manual"); } };
+  if(IN_APP) return html`<div class="overlay" onClick=${e=>{ if(e.target===e.currentTarget) onClose(); }}>
+    <div class="modal login" role="dialog" aria-modal="true" aria-label="Acceso del dueño">
+      <div class="info">
+        <div><span class="eyebrow">Acceso del dueño</span><h2>Abre este enlace en tu navegador</h2>
+          <p class="lead">Estás dentro de WhatsApp u otra app, y ahí Google no permite iniciar sesión. Toca <b>•••</b> y elige <b>«Abrir en el navegador»</b> (Safari o Chrome), o copia el enlace y pégalo en el navegador.</p></div>
+        <button class="btn primary block" onClick=${copy}>${copied===true?"Enlace copiado ✓":"Copiar enlace"}</button>
+        ${copied==="manual" && html`<input class="input" readOnly value=${location.href} onFocus=${e=>e.target.select()}/>`}
+        <div class="arow"><button class="btn" onClick=${onClose}>Cancelar</button></div>
+      </div>
+    </div></div>`;
+  if(FB.hasGis) return html`<div class="overlay" onClick=${e=>{ if(e.target===e.currentTarget) onClose(); }}>
+    <div class="modal login" role="dialog" aria-modal="true" aria-label="Acceso del dueño">
+      <div class="info">
+        <div><span class="eyebrow">Acceso del dueño</span><h2>Entrar al Panel del dueño</h2><p class="lead">Inicia sesión con la cuenta de Google autorizada. Los cambios que publiques se ven al instante en la tienda.</p></div>
+        <div class="gis-wrap"><div ref=${gisRef}></div></div>
+        ${err && html`<div class="amsg bad" style=${{margin:0}}>${err}</div>`}
+        <div class="arow"><button class="btn" onClick=${onClose}>Cancelar</button></div>
+      </div>
+    </div></div>`;
   return html`<div class="overlay" onClick=${e=>{ if(e.target===e.currentTarget) onClose(); }}>
     <div class="modal login" role="dialog" aria-modal="true" aria-label="Acceso del dueño">
       <div class="info">
         <div><span class="eyebrow">Acceso del dueño</span><h2>Entrar al Panel del dueño</h2><p class="lead">Inicia sesión con la cuenta de Google autorizada. Los cambios que publiques se ven al instante en la tienda.</p></div>
-        ${inApp ? html`<div class="amsg" style=${{margin:0}}>Estás dentro de WhatsApp u otra app. Para iniciar sesión, abre este enlace en Safari o Chrome: toca ••• y elige «Abrir en el navegador».</div>
-        <button class="btn primary" onClick=${copy}>${copied?"Enlace copiado ✓":"Copiar enlace"}</button>
-        ${copyFail && html`<input class="input" readonly value=${location.href} onFocus=${e=>e.target.select()} aria-label="Enlace para abrir en el navegador"/>`}`
-        : html`<button class="btn google" onClick=${go} disabled=${busy}>
+        <button class="btn google" onClick=${go} disabled=${busy}>
           <svg width="18" height="18" viewBox="0 0 48 48" aria-hidden="true"><path fill="#FFC107" d="M43.6 20.5H42V20H24v8h11.3C33.7 32.7 29.3 36 24 36c-6.6 0-12-5.4-12-12s5.4-12 12-12c3.1 0 5.8 1.2 7.9 3.1l5.7-5.7C34 6.1 29.3 4 24 4 12.9 4 4 12.9 4 24s8.9 20 20 20 20-8.9 20-20c0-1.3-.1-2.4-.4-3.5z"/><path fill="#FF3D00" d="m6.3 14.7 6.6 4.8C14.7 15.1 19 12 24 12c3.1 0 5.8 1.2 7.9 3.1l5.7-5.7C34 6.1 29.3 4 24 4 16.3 4 9.7 8.3 6.3 14.7z"/><path fill="#4CAF50" d="M24 44c5.2 0 9.9-2 13.4-5.2l-6.2-5.2C29.2 35.1 26.7 36 24 36c-5.3 0-9.7-3.3-11.3-8l-6.5 5C9.5 39.6 16.2 44 24 44z"/><path fill="#1976D2" d="M43.6 20.5H42V20H24v8h11.3c-.8 2.2-2.2 4.2-4.1 5.6l6.2 5.2C37 39.2 44 34 44 24c0-1.3-.1-2.4-.4-3.5z"/></svg>
-          ${busy?"Abriendo Google…":"Iniciar sesión con Google"}</button>`}
+          ${busy?"Abriendo Google…":"Iniciar sesión con Google"}</button>
         ${err && html`<div class="amsg bad" style=${{margin:0}}>${err}</div>`}
         <div class="arow"><button class="btn" onClick=${onClose}>Cancelar</button></div>
       </div>
