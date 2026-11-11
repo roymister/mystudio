@@ -1,31 +1,95 @@
-# SubliPro · Tienda de sublimados
+# 🎨 M&Y Studio · Tienda web de sublimados con personalizador 3D
 
-Tienda web de una sola página: carrusel, catálogo por categorías, carrito con pedido por WhatsApp, cotizador por volumen, personalizador de polos 3D y **Panel del dueño** para editar todo sin tocar código.
+Tienda online para un taller de **sublimación y productos personalizados** (polos, tazas, mousepads, accesorios y regalos). Los clientes **diseñan su producto en 3D**, lo ven en 360° antes de comprar y envían el pedido por **WhatsApp**. El dueño administra todo el catálogo desde un **panel con inicio de sesión de Google**, sin tocar código.
 
-Tecnología: **React 18 + htm** (JSX sin compilación) y **Three.js r128** para el polo 3D. No necesita `npm install`; las librerías se cargan desde CDN. Para armar la página solo hace falta **Python**.
+🔗 **Demo en vivo:** [roymister.github.io/mystudio](https://roymister.github.io/mystudio/)
+
+<!-- Agrega capturas en docs/capturas/ y descomenta estas líneas:
+![Inicio](docs/capturas/inicio.png)
+![Personalizador 3D](docs/capturas/personalizador.png)
+![Panel del dueño](docs/capturas/panel.png)
+-->
 
 ---
 
-## 1. Estructura
+## ✨ Funcionalidades
+
+### Para clientes
+- **Catálogo** con más de 30 productos en 5 categorías, buscador y carrusel de promociones.
+- **Personalizadores 3D** (Three.js) para **polos, tazas y mousepads**:
+  - Rotación 360°, zoom y vistas rápidas (frente, espalda, lados).
+  - Cambio de color del producto, del cuello/puños o del borde cosido.
+  - **Diseños proyectados sobre la superficie real** (calcomanías que siguen arrugas y curvas): logos, textos o imágenes propias, en cualquier parte del producto.
+  - **Estampado completo** (sublimación total) con patrones o imagen propia.
+  - Mousepad con **tamaños reales** (22×18 hasta 90×40 cm) que cambian el modelo 3D.
+- **Carrito** con descuento automático por volumen y **envío del pedido por WhatsApp** con el detalle armado.
+- **Cotizador** para empresas y eventos (doble cara, entrega urgente, descuentos por cantidad).
+- Diseño **responsive** (celular, tablet y escritorio).
+
+### Para el administrador
+- **Inicio de sesión con Google** (Firebase Authentication + Google Identity Services), compatible con celulares.
+- **Panel del dueño** para crear, editar, duplicar, ocultar y eliminar productos, categorías, diapositivas del carrusel y ajustes de la tienda (nombre, WhatsApp, medios de pago, descuentos por volumen).
+- Precios con **descuento por producto**, fotos subidas (comprimidas en el navegador) o por enlace.
+- **Publicación instantánea**: los cambios se guardan en Firestore y los clientes los ven al momento.
+- **Borrador automático** y vista previa antes de publicar.
+
+---
+
+## 🛠️ Tecnologías
+
+| Área | Tecnología |
+|---|---|
+| Interfaz | **React 18** + **htm** (JSX sin compilación), HTML5, CSS3 |
+| 3D | **Three.js** (GLTFLoader, OrbitControls, DecalGeometry), modelos glTF/GLB |
+| Autenticación | **Firebase Authentication** + **Google Identity Services** |
+| Base de datos | **Cloud Firestore** con reglas de seguridad |
+| Hosting | **GitHub Pages** |
+| Build | **Python** (script que empaqueta la app en `docs/`) |
+| Integraciones | WhatsApp (enlaces `wa.me`), Unsplash (fotos de referencia) |
+
+---
+
+## 🧱 Arquitectura
+
+```mermaid
+flowchart LR
+    C[Cliente] -->|abre la tienda| GH[GitHub Pages<br/>HTML · JS · modelos 3D]
+    A[Administrador] -->|#admin| GH
+    GH -->|lee catálogo| FS[(Cloud Firestore)]
+    A -->|Iniciar sesión con Google| AUTH[Firebase Auth]
+    AUTH -->|token| GH
+    GH -->|publica cambios<br/>solo administradores| FS
+    C -->|pedido| WA[WhatsApp]
+```
+
+- La página es **estática** (sin servidor propio): se publica en GitHub Pages.
+- El catálogo vive en **Firestore**; si Firebase no responde, la tienda usa una copia incluida en la página.
+- La **seguridad** está en las reglas de Firestore: cualquiera puede leer la tienda, pero **solo los administradores autorizados pueden escribir**.
+
+---
+
+## 📁 Estructura del proyecto
 
 ```
-sublipro-tienda/
-├── build.py                 → arma la carpeta docs/ (lo que publica GitHub Pages)
+├── build.py               # Empaqueta src/, styles/ y data/ en docs/
 ├── src/
-│   ├── app.js               → app: datos, carrito, rutas, páginas y guardado
-│   ├── art.js               → ilustraciones SVG de cada tipo de producto
-│   ├── admin.js             → Panel del dueño y acceso con GitHub
-│   ├── sim.js               → simulador 3D del polo
-│   └── sim-markup.html      → HTML de los paneles del simulador
-├── styles/
-│   ├── store.css            → estilos de la tienda (colores en :root)
-│   └── simulador.css        → estilos del simulador (todo bajo .sim)
-├── data/store-data.json     → productos, categorías, carrusel y ajustes
-├── assets/polo.glb, taza.glb → modelos 3D (polo y taza)
-└── docs/                    → página final generada (no editar a mano)
+│   ├── app.js             # App: rutas, catálogo, carrito, cotizador, páginas 3D
+│   ├── admin.js           # Panel del dueño e inicio de sesión
+│   ├── firebase-store.js  # Conexión con Firebase (auth + Firestore)
+│   ├── sim.js             # Motor del personalizador 3D (polo, taza, mousepad)
+│   ├── sim-markup.html    # Paneles del personalizador
+│   └── art.js             # Ilustraciones SVG de productos
+├── styles/                # Estilos de la tienda y del personalizador
+├── data/store-data.json   # Catálogo inicial (respaldo)
+├── assets/*.glb           # Modelos 3D
+└── docs/                  # Sitio generado que publica GitHub Pages
 ```
 
-## 2. Probar en tu computadora
+---
+
+## 🚀 Ejecutar en local
+
+Requisitos: **Python 3**.
 
 ```bash
 python build.py
@@ -33,61 +97,40 @@ cd docs
 python -m http.server 8080
 ```
 
-Abre **http://localhost:8080**. Para apagar el servidor usa **Ctrl + C**.
+Abre `http://localhost:8080` (tienda) o `http://localhost:8080/#admin` (panel).
 
 ---
 
-## 3. Publicar en GitHub Pages (gratis)
+## 🔐 Seguridad
 
-1. Crea una cuenta en **github.com**.
-2. Crea un repositorio **público** llamado, por ejemplo, `sublipro`: botón **New**, pones el nombre, eliges *Public* y **Create repository**.
-3. Sube los archivos: en el repositorio entra a **Add file → Upload files**, arrastra **todo el contenido** de la carpeta del proyecto (incluida `docs/`) y presiona **Commit changes**.
-4. Activa la página: **Settings → Pages → Build and deployment**. En *Source* elige **Deploy from a branch**, luego la rama **main**, la carpeta **/docs** y **Save**.
-5. Espera 1 o 2 minutos. Tu tienda queda en:
-   **https://TU-USUARIO.github.io/sublipro/**
-
-Ese es el enlace que compartes con tus clientes.
+- Sin contraseñas ni claves privadas en el repositorio; la configuración web de Firebase es pública por diseño.
+- Administradores definidos por **ID de usuario de Firebase** en las reglas de Firestore.
+- Escritura bloqueada para cualquier usuario no autorizado; el resto de la base de datos está cerrada.
 
 ---
 
-## 4. Panel del dueño en GitHub
+## 💡 Retos y aprendizajes
 
-### Crear tu token (una sola vez)
-1. En GitHub: tu foto → **Settings → Developer settings → Personal access tokens → Fine-grained tokens → Generate new token**.
-2. Nombre: `Panel tienda`. Expiración: la que prefieras (por ejemplo 1 año).
-3. **Repository access:** *Only select repositories* → elige `sublipro`.
-4. **Permissions → Repository permissions → Contents:** **Read and write**.
-5. **Generate token** y copia el código (empieza con `github_pat_…`). Guárdalo en un lugar seguro: es como una contraseña.
-
-### Usar el panel
-1. Abre **https://TU-USUARIO.github.io/sublipro/#admin**
-2. Escribe tu usuario, el repositorio y el token, y presiona **Entrar**. El navegador te recuerda, así que la próxima vez basta con abrir `#admin`.
-3. Edita productos, fotos, precios, descuentos, categorías, carrusel y ajustes.
-4. Presiona **Publicar cambios**. Se guarda `docs/store-data.json` en tu repositorio y los clientes ven los cambios en **1 o 2 minutos**.
-
-Tus clientes **no ven** el panel: sin token no se puede entrar.
+- **Proyectar diseños sobre telas y superficies curvas** sin deformaciones: filtrado de triángulos de la calcomanía según la normal de la superficie.
+- **Modelos 3D con normales invertidas**: detección y corrección automática en el navegador.
+- **Inicio de sesión en celulares**: Safari y Chrome móvil aíslan el almacenamiento entre sitios; se resolvió con Google Identity Services y aviso para navegadores internos (WhatsApp, Instagram).
+- **Panel sin código para un negocio real**: guardado incremental (solo lo que cambió) y lotes pequeños para respetar los límites de Firestore.
 
 ---
 
-## 5. Si cambias el código más adelante
+## 📦 Créditos
 
-1. Edita en VS Code (`src/`, `styles/`).
-2. Ejecuta `python build.py`.
-3. En GitHub sube **solo los archivos que cambiaste dentro de `docs/`**, normalmente `docs/index.html`.
+- Modelo 3D del polo: *"men POLO shirt, camouflage pattern"* de **funlab117** (Sketchfab), licencia [CC BY 4.0](http://creativecommons.org/licenses/by/4.0/). Modificado: se retiró el estampado original.
+- Modelo 3D del mousepad: *"mouse pad (keyboard pad)"* de **mfk** (Sketchfab), licencia [CC BY 4.0](http://creativecommons.org/licenses/by/4.0/). Modificado: colores y tamaño.
+- Modelo 3D de la taza: *"Taza"* de **little bread 34** (Sketchfab), licencia Sketchfab Standard.
+- Fotos de referencia: [Unsplash](https://unsplash.com).
+- Desarrollado con apoyo de **Claude (Anthropic)** como asistente de programación.
 
-> **Importante:** no subas `docs/store-data.json` desde tu computadora, porque borrarías los cambios que hiciste en el Panel del dueño. Súbelo solo si editaste `data/store-data.json` a propósito.
+---
 
-## 6. Cambios frecuentes en el código
+## 👤 Autor
 
-- **Colores de la marca:** variables en `:root` de `styles/store.css` (`--navy`, `--primary`, `--cyan`, `--pink`).
-- **Nuevo tipo de ilustración:** una entrada en `ART` (`src/art.js`) y en `ART_CHOICES` (`src/admin.js`).
-- **Nueva página:** componente en `src/app.js`, su nombre en `fixedRoutes` y su caso en `App()`.
+**Roy Malpartida Sánchez**
+Estudiante de Ingeniería de Sistemas · Universidad César Vallejo
 
-## Fotos de productos
-
-Las fotos de referencia vienen de **Unsplash** (licencia gratuita, permite uso comercial) y se cargan desde `images.unsplash.com`. Si una foto no carga, la tienda muestra la ilustración del producto. Para cambiar una foto, entra al Panel del dueño, abre el producto y usa **Subir foto** (tu propia foto) o **Pegar enlace**. Lo ideal es reemplazarlas con fotos reales de tus productos.
-
-## Créditos
-
-- Polo: "men POLO shirt, camouflage pattern" de funlab117 (Sketchfab), licencia CC BY 4.0. Modificado: se retiró el estampado original. El crédito debe seguir visible en la página.
-- Taza: "Taza" de little bread 34 (Sketchfab), licencia Sketchfab Standard. Modificado: se retiraron las texturas para cambiar el color.
+[GitHub](https://github.com/roymister) · [LinkedIn](https://www.linkedin.com/in/TU-PERFIL)
