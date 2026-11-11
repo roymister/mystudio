@@ -133,4 +133,4 @@ Abre `http://localhost:8080` (tienda) o `http://localhost:8080/#admin` (panel).
 **Roy Malpartida Sánchez**
 Estudiante de Ingeniería de Sistemas · Universidad César Vallejo
 
-[GitHub](https://github.com/roymister) · [LinkedIn](https://www.linkedin.com/in/TU-PERFIL)
+
