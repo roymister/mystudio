@@ -272,6 +272,42 @@ function SettingsTab({d, update}){
   </div>`;
 }
 
+/* Asistente virtual: se guarda en data.settings.bot (se publica con el resto de ajustes) */
+function BotTab({d, update}){
+  const b = d.settings.bot || BOT_DEFAULT;
+  const edit = fn => update(x=>{ if(!x.settings.bot) x.settings.bot=clone(BOT_DEFAULT); fn(x.settings.bot); });
+  const keysText = k => Array.isArray(k) ? k.join(", ") : (k||"");
+  const moveFaq = (i,k) => edit(bb=>{ const j=i+k; if(j<0||j>=bb.faqs.length) return; [bb.faqs[i],bb.faqs[j]]=[bb.faqs[j],bb.faqs[i]]; });
+  return html`<div class="atab">
+    <div class="bot-admin-head"><${Mascot} size=${56}/><div><b>${b.name||"Tinti"}</b><small>Responde automáticamente las preguntas frecuentes de tus clientes. No usa inteligencia artificial: busca palabras clave en lo que escriben.</small></div></div>
+    <div class="agrid">
+      <${Field} label="Nombre del asistente"><input class="input" value=${b.name} onInput=${e=>edit(bb=>{ bb.name=e.target.value; })}/><//>
+      <${Field} label="Horario y ubicación" hint="Se usa en la variable {horario}"><input class="input" value=${b.hours} onInput=${e=>edit(bb=>{ bb.hours=e.target.value; })}/><//>
+    </div>
+    <${Field} label="Saludo"><textarea value=${b.greeting} onInput=${e=>edit(bb=>{ bb.greeting=e.target.value; })}></textarea><//>
+    <div class="arow">
+      <label class="check"><input type="checkbox" checked=${b.enabled!==false} onChange=${e=>edit(bb=>{ bb.enabled=e.target.checked; })}/> Mostrar el asistente en la tienda</label>
+      <label class="check"><input type="checkbox" checked=${b.teaser!==false} onChange=${e=>edit(bb=>{ bb.teaser=e.target.checked; })}/> Saludar con una burbuja (a los 6 segundos)</label>
+    </div>
+    <p class="note-cfg">Variables que puedes usar en los textos: <b>{nombre}</b> nombre de la tienda · <b>{asistente}</b> nombre del asistente · <b>{pagos}</b> medios de pago · <b>{descuentos}</b> descuentos por volumen · <b>{whatsapp}</b> número de WhatsApp · <b>{horario}</b> horario y ubicación.</p>
+    <div class="af"><span>Preguntas frecuentes (${b.faqs.length}) · las 5 primeras aparecen como botones rápidos</span>
+      <div class="alist">${b.faqs.map((f,i)=>html`<div class="arow-item faq-item" key=${i}>
+        <div class="faq-top"><b>#${i+1}</b>
+          <div class="acts"><button class="btn sm" onClick=${()=>moveFaq(i,-1)} disabled=${i===0} aria-label="Subir">↑</button><button class="btn sm" onClick=${()=>moveFaq(i,1)} disabled=${i===b.faqs.length-1} aria-label="Bajar">↓</button>
+            <${ConfirmButton} ask="¿Eliminar esta pregunta?" onYes=${()=>edit(bb=>{ bb.faqs.splice(i,1); })}/></div></div>
+        <div class="agrid">
+          <${Field} label="Pregunta / texto del botón"><input class="input" value=${f.q} onInput=${e=>edit(bb=>{ bb.faqs[i].q=e.target.value; })}/><//>
+          <${Field} label="Botón de acción"><select value=${f.action||""} onChange=${e=>edit(bb=>{ bb.faqs[i].action=e.target.value; })}>${BOT_ACTIONS.map(([v,l])=>html`<option key=${v} value=${v}>${l}</option>`)}</select><//>
+        </div>
+        <${Field} label="Palabras clave" hint="Separadas por comas. Si el cliente escribe alguna, se muestra esta respuesta."><input class="input" value=${keysText(f.keys)} onInput=${e=>edit(bb=>{ bb.faqs[i].keys=e.target.value; })}/><//>
+        <${Field} label="Respuesta"><textarea value=${f.a} onInput=${e=>edit(bb=>{ bb.faqs[i].a=e.target.value; })}></textarea><//>
+      </div>`)}</div>
+      <div class="arow"><button class="btn sm" onClick=${()=>edit(bb=>{ bb.faqs.push({q:"Nueva pregunta",keys:"",a:"Escribe aquí la respuesta.",action:""}); })}>+ Agregar pregunta</button>
+        <${ConfirmButton} label="Restaurar sugeridas" ask="¿Reemplazar todas las preguntas por las sugeridas?" onYes=${()=>edit(bb=>{ bb.faqs=clone(BOT_DEFAULT.faqs); })}/></div>
+    </div>
+  </div>`;
+}
+
 // Navegadores internos de apps (WhatsApp, Instagram, Facebook…): Google no permite iniciar sesión ahí
 const IN_APP = /WhatsApp|Instagram|FBAN|FBAV|FB_IAB|Line\/|TikTok|; wv\)/i.test(navigator.userAgent);
 function loginError(x){
@@ -365,7 +401,7 @@ function AdminPanel({data, setData, saved, setSaved, onClose, onLogout}){
     }catch(e){ setMsg({ok:false,t:PUBLISH_ERRORS[e&&e.code]||"No se pudo publicar. Inténtalo de nuevo en un momento."}); }
     setBusy(false);
   };
-  const tabs=[["productos","Productos"],["categorias","Categorías"],["carrusel","Carrusel"],["ajustes","Ajustes de la tienda"]];
+  const tabs=[["productos","Productos"],["categorias","Categorías"],["carrusel","Carrusel"],["ajustes","Ajustes de la tienda"],["asistente","Asistente"]];
   return html`<div class="overlay admin-ov">
     <div class="admin" role="dialog" aria-modal="true" aria-label="Panel del dueño">
       <header class="ahdr">
@@ -389,6 +425,7 @@ function AdminPanel({data, setData, saved, setSaved, onClose, onLogout}){
         ${tab==="categorias" && html`<${CategoriesTab} d=${data} update=${update}/>`}
         ${tab==="carrusel" && html`<${SlidesTab} d=${data} update=${update}/>`}
         ${tab==="ajustes" && html`<${SettingsTab} d=${data} update=${update}/>`}
+        ${tab==="asistente" && html`<${BotTab} d=${data} update=${update}/>`}
       </div>
     </div></div>`;
 }

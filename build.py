@@ -23,7 +23,7 @@ CDN = [
 
 app = re.sub(r"/\*@include ([\w.-]+)\*/", lambda m: leer("src", m.group(1)), leer("src", "app.js"))
 sim = "const SIM_MARKUP=" + json.dumps(leer("src", "sim-markup.html"), ensure_ascii=False) + ";\n" + leer("src", "sim.js")
-css = leer("styles", "store.css") + "\n" + leer("styles", "simulador.css")
+css = leer("styles", "store.css") + "\n" + leer("styles", "simulador.css") + "\n" + leer("styles", "chatbot.css")
 # Datos: usa la versión más reciente entre data/ (lo que editas en VS Code) y docs/ (lo que guardó el Panel del dueño)
 OUT = os.path.join(BASE, "docs")
 datos = json.loads(leer("data", "store-data.json"))

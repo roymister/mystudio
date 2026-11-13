@@ -625,6 +625,7 @@ function QuotePage(){
 }
 
 /*@include admin.js*/
+/*@include chatbot.js*/
 
 /* ---------- App ---------- */
 function App(){
@@ -669,6 +670,7 @@ function App(){
     <main key=${custom?hash:route}>${page}</main>
     <${Footer}/>
     <${CartDrawer}/>
+    ${!admin && !login && html`<${ChatBot} onOpen=${onOpen}/>`}
     ${admin && html`<${AdminPanel} data=${data} setData=${setData} saved=${saved} setSaved=${setSaved} onClose=${()=>{ setAdmin(false); if(location.hash==="#admin") history.replaceState(null,"",location.pathname+location.search); }} onLogout=${FB?()=>{ FB.signOut(); setAdmin(false); }:IN_CLAUDE?null:()=>{ ghSave(null); setCanEdit(false); setAdmin(false); }}/>`}
     ${login && FB && html`<${GoogleLogin} onClose=${()=>{ setLogin(false); history.replaceState(null,"",location.pathname+location.search); }} onOk=${()=>{ setLogin(false); setCanEdit(true); setAdmin(true); }}/>`}
     ${login && !FB && html`<${GitHubLogin} onClose=${()=>{ setLogin(false); history.replaceState(null,"",location.pathname+location.search); }} onOk=${()=>{ setLogin(false); setCanEdit(true); setAdmin(true); }}/>`}
