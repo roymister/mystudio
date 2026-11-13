@@ -347,15 +347,19 @@ function CustomPage({p, onOpen}){
   const [color,setColor] = useState(()=>BASE_COLORS.find(c=>c[1].toUpperCase()===(p.color||"").toUpperCase()) || BASE_COLORS[0]);
   const [opt,setOpt] = useState(p.options&&p.options.values.length?p.options.values[0]:null);
   const [qty,setQty] = useState(1), [print,setPrint] = useState(null), [note,setNote] = useState(""), [err,setErr] = useState("");
-  const [pos,setPos] = useState({s:0.8,x:0,y:0});
+  const canCover = artCanCover(p.art);
+  const [cover,setCover] = useState(canCover);   // true: el diseño cubre todo el producto
+  const start = c => ({s:c?1:0.8,x:0,y:0});
+  const [pos,setPos] = useState(()=>start(canCover));
+  const setMode = c => { setCover(c); setPos(start(c)); };
   const onFile = async e => { const f=e.target.files[0]; e.target.value=""; if(!f) return; setErr("");
-    try{ setPrint(await compressImage(f,700,0.85)); setPos({s:0.8,x:0,y:0}); }catch(_){ setErr("No se pudo leer esa imagen. Prueba con un JPG o PNG."); } };
+    try{ setPrint(await compressImage(f,900,0.85)); setPos(start(cover)); }catch(_){ setErr("No se pudo leer esa imagen. Prueba con un JPG o PNG."); } };
   const unit=finalPrice(p), cat=CATEGORIES.find(c=>c.id===p.cat);
-  const artProps = {type:p.art, color:usesColor?color[1]:p.color, inner:p.inner, thermo:p.thermo, print, printPos:print?pos:null};
+  const artProps = {type:p.art, color:usesColor?color[1]:p.color, inner:p.inner, thermo:p.thermo, print, printPos:print?{...pos,full:cover}:null};
   const addToCart = () => {
     const thumb = "data:image/svg+xml;charset=utf-8,"+encodeURIComponent(artMarkup(p.art, artProps));
     add({ id:p.id, name:p.name, unit, qty, art:p.art, color:artProps.color, inner:p.inner, thumb,
-      detail:[usesColor && `Color: ${color[0]}`, opt && `${p.options.label}: ${opt}`, print?"con diseño subido":"diseño por WhatsApp", note && `Nota: ${note}`].filter(Boolean).join(" · ") });
+      detail:[usesColor && `Color: ${color[0]}`, opt && `${p.options.label}: ${opt}`, print?(cover?"diseño en todo el producto":"diseño como logo"):"diseño por WhatsApp", note && `Nota: ${note}`].filter(Boolean).join(" · ") });
   };
   const slider = (label,key,min,max,step) => html`<label class="cz-range"><span>${label}</span>
     <input type="range" min=${min} max=${max} step=${step} value=${pos[key]} onInput=${e=>setPos({...pos,[key]:+e.target.value})}/></label>`;
@@ -375,8 +379,11 @@ function CustomPage({p, onOpen}){
           <label class="drop">${print?"Cambiar mi diseño":"Subir mi diseño (PNG / JPG, ideal 300 DPI)"}<input type="file" accept="image/*" onChange=${onFile}/></label>
           ${err && html`<small class="pay-warn">${err}</small>`}
           ${print && html`<div class="cz-adjust">
-            ${slider("Tamaño","s",0.3,1.6,0.05)}${slider("Horizontal","x",-0.5,0.5,0.02)}${slider("Vertical","y",-0.5,0.5,0.02)}
-            <div style=${{display:"flex",gap:8}}><button class="btn" onClick=${()=>setPos({s:0.8,x:0,y:0})}>Centrar</button><button class="btn" onClick=${()=>setPrint(null)}>Quitar diseño</button></div>
+            ${canCover && html`<div class="chips" role="group" aria-label="Dónde va el diseño">
+              <button aria-pressed=${cover} onClick=${()=>setMode(true)}>Todo el producto</button>
+              <button aria-pressed=${!cover} onClick=${()=>setMode(false)}>Solo un logo</button></div>`}
+            ${slider(cover?"Zoom":"Tamaño","s",cover?1:0.3,cover?3:1.6,0.05)}${slider("Horizontal","x",-0.5,0.5,0.02)}${slider("Vertical","y",-0.5,0.5,0.02)}
+            <div style=${{display:"flex",gap:8}}><button class="btn" onClick=${()=>setPos(start(cover))}>Centrar</button><button class="btn" onClick=${()=>setPrint(null)}>Quitar diseño</button></div>
           </div>`}
         </div>
         ${p.options && p.options.values.length>0 && html`<div class="field">${p.options.label}<div class="chips">${p.options.values.map(v=>html`<button key=${v} aria-pressed=${v===opt} onClick=${()=>setOpt(v)}>${v}</button>`)}</div></div>`}

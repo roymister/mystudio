@@ -45,7 +45,17 @@ const ART={
   sandal:{area:[82,40,76,166,34],draw:(c)=>`<path d="M120 22 Q170 22 172 76 Q174 118 160 150 Q150 176 156 200 Q158 224 120 224 Q82 224 84 200 Q90 176 80 150 Q66 118 68 76 Q70 22 120 22 Z" fill="#1B2232" opacity=".18" transform="translate(4 4)"/><path d="M120 22 Q170 22 172 76 Q174 118 160 150 Q150 176 156 200 Q158 224 120 224 Q82 224 84 200 Q90 176 80 150 Q66 118 68 76 Q70 22 120 22 Z" fill="${c}" stroke="${S}" stroke-width="2"/>`,top:`<path d="M120 58 Q96 82 78 118 M120 58 Q144 82 162 118" fill="none" stroke="#1B2232" stroke-width="12" stroke-linecap="round"/><circle cx="120" cy="58" r="7" fill="#1B2232"/>`},
   fan:{area:[52,26,136,136,68],draw:(c)=>`<rect x="112" y="150" width="16" height="78" rx="8" fill="#C8B48A" stroke="${S}" stroke-width="2"/><circle cx="120" cy="94" r="70" fill="${c}" stroke="${S}" stroke-width="2"/>`}
 };
-function designSVG(id,[x,y,w,h,r],print,pos){
+/* Silueta sublimable de cada producto: las formas que se pintan con el color base */
+const FULL_TOK="#C0FFEE";
+const fullClip = type => { const A=ART[type]; if(!A) return "";
+  const m=A.draw(FULL_TOK,{}).match(/<(?:path|rect|circle|ellipse|polygon)\b[^>]*\bfill="#C0FFEE"[^>]*>/gi); return m?m.join(""):""; };
+const artCanCover = type => !!fullClip(type);
+function designSVG(id,[x,y,w,h,r],print,pos,type){
+  if(print && pos && pos.full){ const shapes=fullClip(type);
+    if(shapes){ // estampado en todo el producto: la imagen cubre todo y se recorta a la silueta
+      const iw=240*pos.s, ih=240*pos.s, ix=(240-iw)/2+(pos.x||0)*240, iy=(240-ih)/2+(pos.y||0)*240;
+      return {defs:`<clipPath id="${id}c">${shapes}</clipPath>`, body:`<g clip-path="url(#${id}c)"><image href="${print}" x="${ix}" y="${iy}" width="${iw}" height="${ih}" preserveAspectRatio="xMidYMid slice"/></g>`};
+    } }
   const clip=`<clipPath id="${id}c"><rect x="${x}" y="${y}" width="${w}" height="${h}" rx="${r}"/></clipPath>`;
   if(print && pos){ // personalizador 2D: diseño completo, con tamaño (s) y desplazamiento (x, y en fracción del área)
     const iw=w*pos.s, ih=h*pos.s, ix=x+(w-iw)/2+(pos.x||0)*w, iy=y+(h-ih)/2+(pos.y||0)*h;
@@ -58,7 +68,7 @@ function designSVG(id,[x,y,w,h,r],print,pos){
 }
 let artUid=0;
 function artMarkup(type,{color="#FFFFFF",print,printPos,inner,thermo,pattern}={}){
-  const A=ART[type]||ART.tee, id="a"+(++artUid), d=designSVG(id,A.area,print,printPos);
+  const A=ART[type]||ART.tee, id="a"+(++artUid), d=designSVG(id,A.area,print,printPos,ART[type]?type:"tee");
   const pat = pattern ? `<pattern id="${id}p" width="24" height="24" patternUnits="userSpaceOnUse"><path d="M0 18 L12 6 L24 18" fill="none" stroke="#fff" stroke-width="5" opacity=".75"/></pattern>` : "";
   const body = A.draw(color,{inner,thermo});
   const patLayer = pattern && (type==="polo"||type==="tee") ? `<clipPath id="${id}k">${body.match(/<path d="[^"]+"/)[0]}/></clipPath><rect width="240" height="240" fill="url(#${id}p)" clip-path="url(#${id}k)"/>` : "";
@@ -69,6 +79,6 @@ function artMarkup(type,{color="#FFFFFF",print,printPos,inner,thermo,pattern}={}
 const artUsesColor = type => { const A=ART[type]; return !!A && A.draw("#ABC123",{}).includes("#ABC123"); };
 function ProductArt(props){
   const pp = props.printPos;
-  const m = useMemo(()=>artMarkup(props.type,props),[props.type,props.color,props.print,props.inner,props.thermo,props.pattern,pp&&pp.s,pp&&pp.x,pp&&pp.y]);
+  const m = useMemo(()=>artMarkup(props.type,props),[props.type,props.color,props.print,props.inner,props.thermo,props.pattern,pp&&pp.s,pp&&pp.x,pp&&pp.y,pp&&pp.full]);
   return html`<span class="art-svg" dangerouslySetInnerHTML=${{__html:m}}></span>`;
 }
