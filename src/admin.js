@@ -20,6 +20,29 @@ function PhotoInput({value, onChange, label="Foto"}){
     ${showUrl && html`<div class="two"><input class="input" placeholder="https://… (enlace directo a la imagen)" value=${url} onInput=${e=>setUrl(e.target.value)}/><button class="btn" onClick=${()=>{ if(/^https:\/\/\S+$/.test(url.trim())){ onChange(url.trim()); setShowUrl(false); setUrl(""); setErr(""); } else setErr("Pega un enlace que empiece con https://"); }}>Usar enlace</button></div>`}
     ${err && html`<small class="err">${err}</small>`}</div>`;
 }
+/* Modelos listos: diseños ya hechos que el cliente puede elegir en la página del producto */
+const MAX_MODELS=8;
+function ModelsInput({value, onChange}){
+  const list=value||[];
+  const [busy,setBusy]=useState(false), [err,setErr]=useState("");
+  const pick=async e=>{ const files=[...e.target.files]; e.target.value=""; if(!files.length) return;
+    const room=MAX_MODELS-list.length; if(room<=0){ setErr(`Máximo ${MAX_MODELS} modelos por producto.`); return; }
+    setBusy(true); setErr(""); const out=[];
+    for(const f of files.slice(0,room)){ try{ out.push(await compressImage(f,700,0.78)); }catch(_){ setErr("Alguna imagen no se pudo leer. Prueba con JPG o PNG."); } }
+    if(files.length>room) setErr(`Solo se agregaron ${room}: el máximo es ${MAX_MODELS} modelos por producto.`);
+    onChange([...list,...out]); setBusy(false); };
+  const move=(i,d)=>{ const n=[...list], j=i+d; if(j<0||j>=n.length) return; [n[i],n[j]]=[n[j],n[i]]; onChange(n); };
+  return html`<div class="af"><span>Modelos listos (diseños ya hechos que el cliente puede elegir)</span>
+    <div class="models-in">
+      ${list.map((m,i)=>html`<div class="mi" key=${i}><img src=${m} alt=${"Modelo "+(i+1)}/>
+        <div class="mi-acts"><button class="btn sm" onClick=${()=>move(i,-1)} disabled=${i===0} aria-label="Mover a la izquierda">←</button>
+          <button class="btn danger sm" onClick=${()=>onChange(list.filter((_,k)=>k!==i))} aria-label="Quitar modelo">×</button>
+          <button class="btn sm" onClick=${()=>move(i,1)} disabled=${i===list.length-1} aria-label="Mover a la derecha">→</button></div></div>`)}
+      ${list.length<MAX_MODELS && html`<label class="mi add">${busy?"Procesando…":"+ Agregar fotos"}<input type="file" accept="image/*" multiple onChange=${pick} hidden/></label>`}
+    </div>
+    <small>${list.length}/${MAX_MODELS} · Puedes elegir varias fotos a la vez. Usa la imagen del diseño (de frente, sin fondo si es posible).</small>
+    ${err && html`<small class="err">${err}</small>`}</div>`;
+}
 function ConfirmButton({label="Eliminar", ask="¿Eliminar?", onYes}){
   const [c,setC]=useState(false);
   return c ? html`<span class="confirm">${ask} <button class="btn danger sm" onClick=${()=>{setC(false);onYes();}}>Sí</button><button class="btn sm" onClick=${()=>setC(false)}>No</button></span>`
@@ -45,6 +68,7 @@ function ProductEditor({p, cats, onChange, onClose}){
         <div style=${{display:"flex",flexDirection:"column",gap:6,flex:1,minWidth:0}}><select value=${p.art} onChange=${e=>set("art",e.target.value)}>${ART_CHOICES.map(([v,l])=>html`<option key=${v} value=${v}>${l}</option>`)}</select>
         <label class="inline">Color <input type="color" value=${(p.color||"#ffffff").toLowerCase()} onInput=${e=>set("color",e.target.value.toUpperCase())}/></label></div></div></div>
     </div>
+    <${ModelsInput} value=${p.models} onChange=${v=>set("models",v)}/>
     <div class="arow">
       <label class="check"><input type="checkbox" checked=${!p.hidden} onChange=${e=>set("hidden",!e.target.checked)}/> Visible en la tienda</label>
       <label class="check"><input type="checkbox" checked=${!!p.featured} onChange=${e=>set("featured",e.target.checked)}/> Mostrar en "Los más pedidos"</label>

@@ -352,8 +352,11 @@ function CustomPage({p, onOpen}){
   const start = c => ({s:c?1:0.8,x:0,y:0});
   const [pos,setPos] = useState(()=>start(canCover));
   const setMode = c => { setCover(c); setPos(start(c)); };
+  const models = (p.models||[]).filter(Boolean);
+  const [model,setModel] = useState(null);       // índice del modelo listo elegido (null = diseño propio)
+  const useModel = i => { setPrint(models[i]); setModel(i); setPos(start(cover)); setErr(""); };
   const onFile = async e => { const f=e.target.files[0]; e.target.value=""; if(!f) return; setErr("");
-    try{ setPrint(await compressImage(f,900,0.85)); setPos(start(cover)); }catch(_){ setErr("No se pudo leer esa imagen. Prueba con un JPG o PNG."); } };
+    try{ setPrint(await compressImage(f,900,0.85)); setModel(null); setPos(start(cover)); }catch(_){ setErr("No se pudo leer esa imagen. Prueba con un JPG o PNG."); } };
   const unit=finalPrice(p), cat=CATEGORIES.find(c=>c.id===p.cat);
   const artProps = {type:p.art, color:usesColor?color[1]:p.color, inner:p.inner, thermo:p.thermo, print, printPos:print?{...pos,full:cover}:null};
   const addToCart = () => {
@@ -361,7 +364,7 @@ function CustomPage({p, onOpen}){
     const svg = artMarkup(p.art, artProps).replace("<svg ", '<svg xmlns="http://www.w3.org/2000/svg" width="240" height="240" ');
     const thumb = "data:image/svg+xml;charset=utf-8,"+encodeURIComponent(svg);
     add({ id:p.id, name:p.name, unit, qty, art:p.art, color:artProps.color, inner:p.inner, thumb,
-      detail:[usesColor && `Color: ${color[0]}`, opt && `${p.options.label}: ${opt}`, print?(cover?"diseño en todo el producto":"diseño como logo"):"diseño por WhatsApp", note && `Nota: ${note}`].filter(Boolean).join(" · ") });
+      detail:[usesColor && `Color: ${color[0]}`, opt && `${p.options.label}: ${opt}`, model!=null && print && `Modelo listo #${model+1}`, print?(cover?"diseño en todo el producto":"diseño como logo"):"diseño por WhatsApp", note && `Nota: ${note}`].filter(Boolean).join(" · ") });
   };
   const slider = (label,key,min,max,step) => html`<label class="cz-range"><span>${label}</span>
     <input type="range" min=${min} max=${max} step=${step} value=${pos[key]} onInput=${e=>setPos({...pos,[key]:+e.target.value})}/></label>`;
@@ -377,15 +380,17 @@ function CustomPage({p, onOpen}){
         <div style=${{display:"flex",gap:8,alignItems:"center"}}><${Price} p=${p} size=${22}/>${p.discount>0 && html`<span class="tag off">−${p.discount}%</span>`}</div>
         ${usesColor && html`<div class="field">Color: <b>${color[0]}</b>
           <div class="cz-colors">${BASE_COLORS.map(c=>html`<button key=${c[1]} class="cz-sw" style=${{background:c[1]}} aria-pressed=${c[1]===color[1]} aria-label=${c[0]} title=${c[0]} onClick=${()=>setColor(c)}></button>`)}</div></div>`}
-        <div class="field">Tu diseño
-          <label class="drop">${print?"Cambiar mi diseño":"Subir mi diseño (PNG / JPG, ideal 300 DPI)"}<input type="file" accept="image/*" onChange=${onFile}/></label>
+        ${models.length>0 && html`<div class="field">Modelos listos <small class="cz-sub">Toca uno para verlo en tu producto</small>
+          <div class="cz-models">${models.map((m,i)=>html`<button key=${i} class="cz-model" aria-pressed=${model===i&&!!print} aria-label=${"Modelo "+(i+1)} onClick=${()=>useModel(i)}><img src=${m} alt="" loading="lazy"/><span>#${i+1}</span></button>`)}</div></div>`}
+        <div class="field">${models.length?"O sube tu propio diseño":"Tu diseño"}
+          <label class="drop">${print&&model==null?"Cambiar mi diseño":"Subir mi diseño (PNG / JPG, ideal 300 DPI)"}<input type="file" accept="image/*" onChange=${onFile}/></label>
           ${err && html`<small class="pay-warn">${err}</small>`}
           ${print && html`<div class="cz-adjust">
             ${canCover && html`<div class="chips" role="group" aria-label="Dónde va el diseño">
               <button aria-pressed=${cover} onClick=${()=>setMode(true)}>Todo el producto</button>
               <button aria-pressed=${!cover} onClick=${()=>setMode(false)}>Solo un logo</button></div>`}
             ${slider(cover?"Zoom":"Tamaño","s",cover?1:0.3,cover?3:1.6,0.05)}${slider("Horizontal","x",-0.5,0.5,0.02)}${slider("Vertical","y",-0.5,0.5,0.02)}
-            <div style=${{display:"flex",gap:8}}><button class="btn" onClick=${()=>setPos(start(cover))}>Centrar</button><button class="btn" onClick=${()=>setPrint(null)}>Quitar diseño</button></div>
+            <div style=${{display:"flex",gap:8}}><button class="btn" onClick=${()=>setPos(start(cover))}>Centrar</button><button class="btn" onClick=${()=>{ setPrint(null); setModel(null); }}>Quitar diseño</button></div>
           </div>`}
         </div>
         ${p.options && p.options.values.length>0 && html`<div class="field">${p.options.label}<div class="chips">${p.options.values.map(v=>html`<button key=${v} aria-pressed=${v===opt} onClick=${()=>setOpt(v)}>${v}</button>`)}</div></div>`}

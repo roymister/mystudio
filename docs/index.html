@@ -341,6 +341,19 @@ input[type=color]{width:40px;height:32px;border:1px solid var(--line);border-rad
 .cz-adjust{display:flex;flex-direction:column;gap:8px;margin-top:8px;padding:12px;border-radius:12px;background:var(--soft)}
 .cz-range{display:grid;grid-template-columns:84px 1fr;align-items:center;gap:10px;font-size:12.5px;font-weight:600}
 .cz-range input{width:100%;accent-color:var(--primary)}
+/* modelos listos */
+.cz-sub{display:block;font-weight:500;color:var(--muted);margin-top:2px}
+.cz-models{display:grid;grid-template-columns:repeat(auto-fill,minmax(72px,1fr));gap:8px;margin-top:8px}
+.cz-model{position:relative;aspect-ratio:1;border:1px solid var(--line);border-radius:10px;overflow:hidden;padding:0;background:var(--soft);cursor:pointer}
+.cz-model img{width:100%;height:100%;object-fit:cover;display:block}
+.cz-model span{position:absolute;left:4px;bottom:4px;background:rgba(27,34,50,.75);color:#fff;font-size:10.5px;font-weight:700;border-radius:6px;padding:1px 5px}
+.cz-model[aria-pressed="true"]{outline:3px solid var(--primary);outline-offset:1px}
+.models-in{display:grid;grid-template-columns:repeat(auto-fill,minmax(96px,1fr));gap:8px}
+.models-in .mi{display:flex;flex-direction:column;gap:4px;border:1px solid var(--line);border-radius:10px;padding:4px;background:#fff}
+.models-in .mi img{width:100%;aspect-ratio:1;object-fit:cover;border-radius:7px}
+.models-in .mi-acts{display:flex;justify-content:space-between;gap:2px}
+.models-in .mi-acts .btn{padding:2px 8px;min-width:0}
+.models-in .mi.add{align-items:center;justify-content:center;aspect-ratio:1;border:1.5px dashed var(--line);color:var(--primary);cursor:pointer;text-align:center;font-weight:700}
 
 .sim .app{display:grid;gap:16px;max-width:1360px;margin:0 auto;grid-template-columns:1fr}
 @media (min-width:1000px){.sim .app{grid-template-columns:250px minmax(0,1fr) 300px}}
@@ -1365,8 +1378,11 @@ function CustomPage({p, onOpen}){
   const start = c => ({s:c?1:0.8,x:0,y:0});
   const [pos,setPos] = useState(()=>start(canCover));
   const setMode = c => { setCover(c); setPos(start(c)); };
+  const models = (p.models||[]).filter(Boolean);
+  const [model,setModel] = useState(null);       // índice del modelo listo elegido (null = diseño propio)
+  const useModel = i => { setPrint(models[i]); setModel(i); setPos(start(cover)); setErr(""); };
   const onFile = async e => { const f=e.target.files[0]; e.target.value=""; if(!f) return; setErr("");
-    try{ setPrint(await compressImage(f,900,0.85)); setPos(start(cover)); }catch(_){ setErr("No se pudo leer esa imagen. Prueba con un JPG o PNG."); } };
+    try{ setPrint(await compressImage(f,900,0.85)); setModel(null); setPos(start(cover)); }catch(_){ setErr("No se pudo leer esa imagen. Prueba con un JPG o PNG."); } };
   const unit=finalPrice(p), cat=CATEGORIES.find(c=>c.id===p.cat);
   const artProps = {type:p.art, color:usesColor?color[1]:p.color, inner:p.inner, thermo:p.thermo, print, printPos:print?{...pos,full:cover}:null};
   const addToCart = () => {
@@ -1374,7 +1390,7 @@ function CustomPage({p, onOpen}){
     const svg = artMarkup(p.art, artProps).replace("<svg ", '<svg xmlns="http://www.w3.org/2000/svg" width="240" height="240" ');
     const thumb = "data:image/svg+xml;charset=utf-8,"+encodeURIComponent(svg);
     add({ id:p.id, name:p.name, unit, qty, art:p.art, color:artProps.color, inner:p.inner, thumb,
-      detail:[usesColor && `Color: ${color[0]}`, opt && `${p.options.label}: ${opt}`, print?(cover?"diseño en todo el producto":"diseño como logo"):"diseño por WhatsApp", note && `Nota: ${note}`].filter(Boolean).join(" · ") });
+      detail:[usesColor && `Color: ${color[0]}`, opt && `${p.options.label}: ${opt}`, model!=null && print && `Modelo listo #${model+1}`, print?(cover?"diseño en todo el producto":"diseño como logo"):"diseño por WhatsApp", note && `Nota: ${note}`].filter(Boolean).join(" · ") });
   };
   const slider = (label,key,min,max,step) => html`<label class="cz-range"><span>${label}</span>
     <input type="range" min=${min} max=${max} step=${step} value=${pos[key]} onInput=${e=>setPos({...pos,[key]:+e.target.value})}/></label>`;
@@ -1390,15 +1406,17 @@ function CustomPage({p, onOpen}){
         <div style=${{display:"flex",gap:8,alignItems:"center"}}><${Price} p=${p} size=${22}/>${p.discount>0 && html`<span class="tag off">−${p.discount}%</span>`}</div>
         ${usesColor && html`<div class="field">Color: <b>${color[0]}</b>
           <div class="cz-colors">${BASE_COLORS.map(c=>html`<button key=${c[1]} class="cz-sw" style=${{background:c[1]}} aria-pressed=${c[1]===color[1]} aria-label=${c[0]} title=${c[0]} onClick=${()=>setColor(c)}></button>`)}</div></div>`}
-        <div class="field">Tu diseño
-          <label class="drop">${print?"Cambiar mi diseño":"Subir mi diseño (PNG / JPG, ideal 300 DPI)"}<input type="file" accept="image/*" onChange=${onFile}/></label>
+        ${models.length>0 && html`<div class="field">Modelos listos <small class="cz-sub">Toca uno para verlo en tu producto</small>
+          <div class="cz-models">${models.map((m,i)=>html`<button key=${i} class="cz-model" aria-pressed=${model===i&&!!print} aria-label=${"Modelo "+(i+1)} onClick=${()=>useModel(i)}><img src=${m} alt="" loading="lazy"/><span>#${i+1}</span></button>`)}</div></div>`}
+        <div class="field">${models.length?"O sube tu propio diseño":"Tu diseño"}
+          <label class="drop">${print&&model==null?"Cambiar mi diseño":"Subir mi diseño (PNG / JPG, ideal 300 DPI)"}<input type="file" accept="image/*" onChange=${onFile}/></label>
           ${err && html`<small class="pay-warn">${err}</small>`}
           ${print && html`<div class="cz-adjust">
             ${canCover && html`<div class="chips" role="group" aria-label="Dónde va el diseño">
               <button aria-pressed=${cover} onClick=${()=>setMode(true)}>Todo el producto</button>
               <button aria-pressed=${!cover} onClick=${()=>setMode(false)}>Solo un logo</button></div>`}
             ${slider(cover?"Zoom":"Tamaño","s",cover?1:0.3,cover?3:1.6,0.05)}${slider("Horizontal","x",-0.5,0.5,0.02)}${slider("Vertical","y",-0.5,0.5,0.02)}
-            <div style=${{display:"flex",gap:8}}><button class="btn" onClick=${()=>setPos(start(cover))}>Centrar</button><button class="btn" onClick=${()=>setPrint(null)}>Quitar diseño</button></div>
+            <div style=${{display:"flex",gap:8}}><button class="btn" onClick=${()=>setPos(start(cover))}>Centrar</button><button class="btn" onClick=${()=>{ setPrint(null); setModel(null); }}>Quitar diseño</button></div>
           </div>`}
         </div>
         ${p.options && p.options.values.length>0 && html`<div class="field">${p.options.label}<div class="chips">${p.options.values.map(v=>html`<button key=${v} aria-pressed=${v===opt} onClick=${()=>setOpt(v)}>${v}</button>`)}</div></div>`}
@@ -1629,6 +1647,29 @@ function PhotoInput({value, onChange, label="Foto"}){
     ${showUrl && html`<div class="two"><input class="input" placeholder="https://… (enlace directo a la imagen)" value=${url} onInput=${e=>setUrl(e.target.value)}/><button class="btn" onClick=${()=>{ if(/^https:\/\/\S+$/.test(url.trim())){ onChange(url.trim()); setShowUrl(false); setUrl(""); setErr(""); } else setErr("Pega un enlace que empiece con https://"); }}>Usar enlace</button></div>`}
     ${err && html`<small class="err">${err}</small>`}</div>`;
 }
+/* Modelos listos: diseños ya hechos que el cliente puede elegir en la página del producto */
+const MAX_MODELS=8;
+function ModelsInput({value, onChange}){
+  const list=value||[];
+  const [busy,setBusy]=useState(false), [err,setErr]=useState("");
+  const pick=async e=>{ const files=[...e.target.files]; e.target.value=""; if(!files.length) return;
+    const room=MAX_MODELS-list.length; if(room<=0){ setErr(`Máximo ${MAX_MODELS} modelos por producto.`); return; }
+    setBusy(true); setErr(""); const out=[];
+    for(const f of files.slice(0,room)){ try{ out.push(await compressImage(f,700,0.78)); }catch(_){ setErr("Alguna imagen no se pudo leer. Prueba con JPG o PNG."); } }
+    if(files.length>room) setErr(`Solo se agregaron ${room}: el máximo es ${MAX_MODELS} modelos por producto.`);
+    onChange([...list,...out]); setBusy(false); };
+  const move=(i,d)=>{ const n=[...list], j=i+d; if(j<0||j>=n.length) return; [n[i],n[j]]=[n[j],n[i]]; onChange(n); };
+  return html`<div class="af"><span>Modelos listos (diseños ya hechos que el cliente puede elegir)</span>
+    <div class="models-in">
+      ${list.map((m,i)=>html`<div class="mi" key=${i}><img src=${m} alt=${"Modelo "+(i+1)}/>
+        <div class="mi-acts"><button class="btn sm" onClick=${()=>move(i,-1)} disabled=${i===0} aria-label="Mover a la izquierda">←</button>
+          <button class="btn danger sm" onClick=${()=>onChange(list.filter((_,k)=>k!==i))} aria-label="Quitar modelo">×</button>
+          <button class="btn sm" onClick=${()=>move(i,1)} disabled=${i===list.length-1} aria-label="Mover a la derecha">→</button></div></div>`)}
+      ${list.length<MAX_MODELS && html`<label class="mi add">${busy?"Procesando…":"+ Agregar fotos"}<input type="file" accept="image/*" multiple onChange=${pick} hidden/></label>`}
+    </div>
+    <small>${list.length}/${MAX_MODELS} · Puedes elegir varias fotos a la vez. Usa la imagen del diseño (de frente, sin fondo si es posible).</small>
+    ${err && html`<small class="err">${err}</small>`}</div>`;
+}
 function ConfirmButton({label="Eliminar", ask="¿Eliminar?", onYes}){
   const [c,setC]=useState(false);
   return c ? html`<span class="confirm">${ask} <button class="btn danger sm" onClick=${()=>{setC(false);onYes();}}>Sí</button><button class="btn sm" onClick=${()=>setC(false)}>No</button></span>`
@@ -1654,6 +1695,7 @@ function ProductEditor({p, cats, onChange, onClose}){
         <div style=${{display:"flex",flexDirection:"column",gap:6,flex:1,minWidth:0}}><select value=${p.art} onChange=${e=>set("art",e.target.value)}>${ART_CHOICES.map(([v,l])=>html`<option key=${v} value=${v}>${l}</option>`)}</select>
         <label class="inline">Color <input type="color" value=${(p.color||"#ffffff").toLowerCase()} onInput=${e=>set("color",e.target.value.toUpperCase())}/></label></div></div></div>
     </div>
+    <${ModelsInput} value=${p.models} onChange=${v=>set("models",v)}/>
     <div class="arow">
       <label class="check"><input type="checkbox" checked=${!p.hidden} onChange=${e=>set("hidden",!e.target.checked)}/> Visible en la tienda</label>
       <label class="check"><input type="checkbox" checked=${!!p.featured} onChange=${e=>set("featured",e.target.checked)}/> Mostrar en "Los más pedidos"</label>
