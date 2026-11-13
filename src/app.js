@@ -348,25 +348,34 @@ function CustomPage({p, onOpen}){
   const [opt,setOpt] = useState(p.options&&p.options.values.length?p.options.values[0]:null);
   const [qty,setQty] = useState(1), [print,setPrint] = useState(null), [note,setNote] = useState(""), [err,setErr] = useState("");
   const canCover = artCanCover(p.art);
-  const [cover,setCover] = useState(canCover);   // true: el diseño cubre todo el producto
+  const [cover,setCover] = useState(canCover);   // true: el diseño propio cubre todo el producto
   const start = c => ({s:c?1:0.8,x:0,y:0});
   const [pos,setPos] = useState(()=>start(canCover));
   const setMode = c => { setCover(c); setPos(start(c)); };
+  // Modelos listos = fotos de trabajos ya hechos. view: índice de la foto que se ve, o null = personalizar con diseño propio
   const models = (p.models||[]).filter(Boolean);
-  const [model,setModel] = useState(null);       // índice del modelo listo elegido (null = diseño propio)
-  const cur = useRef(null);                       // modelo actual al instante (clics rápidos en las flechas)
-  const useModel = i => { cur.current=i; setPrint(models[i]); setModel(i); setPos(start(cover)); setErr(""); };
-  const stepModel = d => { const n=models.length; if(!n) return; const c = cur.current==null ? (d>0?-1:0) : cur.current; useModel((c+d+n)%n); };
+  const [view,setView] = useState(models.length?0:null);
+  const cur = useRef(models.length?0:null);       // valor al instante (clics rápidos en las flechas)
+  const show = i => { cur.current=i; setView(i); setErr(""); };
+  const step = d => { const n=models.length; if(!n) return; const c=cur.current==null?(d>0?-1:0):cur.current; show((c+d+n)%n); };
+  const custom = () => { cur.current=null; setView(null); };
+  const swipe = useRef(null);
   const onFile = async e => { const f=e.target.files[0]; e.target.value=""; if(!f) return; setErr("");
-    try{ setPrint(await compressImage(f,900,0.85)); setModel(null); cur.current=null; setPos(start(cover)); }catch(_){ setErr("No se pudo leer esa imagen. Prueba con un JPG o PNG."); } };
+    try{ setPrint(await compressImage(f,900,0.85)); custom(); setPos(start(cover)); }catch(_){ setErr("No se pudo leer esa imagen. Prueba con un JPG o PNG."); } };
   const unit=finalPrice(p), cat=CATEGORIES.find(c=>c.id===p.cat);
   const artProps = {type:p.art, color:usesColor?color[1]:p.color, inner:p.inner, thermo:p.thermo, print, printPos:print?{...pos,full:cover}:null};
+  const isModel = view!=null;
   const addToCart = () => {
+    if(isModel){
+      add({ id:p.id, name:p.name, unit, qty, art:p.art, color:p.color, inner:p.inner, thumb:models[view],
+        detail:[`Modelo #${view+1}`, opt && `${p.options.label}: ${opt}`, note && `Nota: ${note}`].filter(Boolean).join(" · ") });
+      return;
+    }
     // Como archivo de imagen, el SVG necesita xmlns (si no, el <img> del carrito sale roto)
     const svg = artMarkup(p.art, artProps).replace("<svg ", '<svg xmlns="http://www.w3.org/2000/svg" width="240" height="240" ');
     const thumb = "data:image/svg+xml;charset=utf-8,"+encodeURIComponent(svg);
     add({ id:p.id, name:p.name, unit, qty, art:p.art, color:artProps.color, inner:p.inner, thumb,
-      detail:[usesColor && `Color: ${color[0]}`, opt && `${p.options.label}: ${opt}`, model!=null && print && `Modelo listo #${model+1}`, print?(cover?"diseño en todo el producto":"diseño como logo"):"diseño por WhatsApp", note && `Nota: ${note}`].filter(Boolean).join(" · ") });
+      detail:[usesColor && `Color: ${color[0]}`, opt && `${p.options.label}: ${opt}`, print?(cover?"diseño en todo el producto":"diseño como logo"):"diseño por WhatsApp", note && `Nota: ${note}`].filter(Boolean).join(" · ") });
   };
   const slider = (label,key,min,max,step) => html`<label class="cz-range"><span>${label}</span>
     <input type="range" min=${min} max=${max} step=${step} value=${pos[key]} onInput=${e=>setPos({...pos,[key]:+e.target.value})}/></label>`;
@@ -375,38 +384,47 @@ function CustomPage({p, onOpen}){
     <section class="section wrap"><div class="cz">
       <div class="cz-stage">
         <div class="cz-view">
-          ${models.length>1 && html`<button class="cz-arrow prev" onClick=${()=>stepModel(-1)} aria-label="Modelo anterior">‹</button>`}
-          <div class="cz-art"><${ProductArt} ...${artProps}/></div>
-          ${models.length>1 && html`<button class="cz-arrow next" onClick=${()=>stepModel(1)} aria-label="Modelo siguiente">›</button>`}
+          ${models.length>1 && html`<button class="cz-arrow prev" onClick=${()=>step(-1)} aria-label="Modelo anterior">‹</button>`}
+          ${isModel
+            ? html`<div class="cz-slider" onPointerDown=${e=>{ swipe.current=e.clientX; }} onPointerUp=${e=>{ const s=swipe.current; swipe.current=null; if(s!=null && Math.abs(e.clientX-s)>40) step(e.clientX<s?1:-1); }}>
+                <div class="cz-track" style=${{transform:`translateX(-${view*100}%)`}}>
+                  ${models.map((m,i)=>html`<div class="cz-slide" key=${i} aria-hidden=${i!==view}><img src=${m} alt=${`${p.name}, modelo ${i+1}`} draggable="false"/></div>`)}
+                </div></div>`
+            : html`<div class="cz-art"><${ProductArt} ...${artProps}/></div>`}
+          ${models.length>1 && html`<button class="cz-arrow next" onClick=${()=>step(1)} aria-label="Modelo siguiente">›</button>`}
         </div>
-        ${models.length>0 && html`<div class="cz-count">${model!=null&&print?`Modelo ${model+1} de ${models.length}`:`${models.length} modelo${models.length>1?"s":""} listo${models.length>1?"s":""} · usa las flechas`}</div>`}
-        <small class="cz-hint">${print?"Vista previa con tu diseño. El acabado final puede variar ligeramente.":"Sube tu diseño y mira cómo queda."}</small>
-        ${p.photo && html`<div class="cz-photo"><${Photo} src=${p.photo} alt=${"Foto de "+p.name} fallback=${null}/><span>Foto real del producto</span></div>`}
+        ${models.length>0 && html`<div class="cz-dots">${models.map((_,i)=>html`<button key=${i} class="cz-dot" aria-pressed=${view===i} aria-label=${"Ver modelo "+(i+1)} onClick=${()=>show(i)}></button>`)}</div>`}
+        <small class="cz-hint">${isModel?`Modelo ${view+1} de ${models.length} · trabajo ya realizado`:print?"Vista previa con tu diseño. El acabado final puede variar ligeramente.":"Sube tu diseño y mira cómo queda."}</small>
+        ${p.photo && !isModel && html`<div class="cz-photo"><${Photo} src=${p.photo} alt=${"Foto de "+p.name} fallback=${null}/><span>Foto real del producto</span></div>`}
       </div>
       <div class="cz-panel">
         <div style=${{display:"flex",gap:8,alignItems:"center"}}><${Price} p=${p} size=${22}/>${p.discount>0 && html`<span class="tag off">−${p.discount}%</span>`}</div>
+        ${models.length>0 && html`<div class="field">Modelos listos <small class="cz-sub">Elige uno de nuestros trabajos o usa las flechas</small>
+          <div class="cz-models">${models.map((m,i)=>html`<button key=${i} class="cz-model" aria-pressed=${view===i} aria-label=${"Modelo "+(i+1)} onClick=${()=>show(i)}><img src=${m} alt="" loading="lazy"/><span>#${i+1}</span></button>`)}</div></div>`}
+        ${isModel
+          ? html`<div class="field">¿Prefieres tu propio diseño?
+              <button class="drop" onClick=${custom}>Personalizar con mi diseño</button></div>`
+          : html`
         ${usesColor && html`<div class="field">Color: <b>${color[0]}</b>
           <div class="cz-colors">${BASE_COLORS.map(c=>html`<button key=${c[1]} class="cz-sw" style=${{background:c[1]}} aria-pressed=${c[1]===color[1]} aria-label=${c[0]} title=${c[0]} onClick=${()=>setColor(c)}></button>`)}</div></div>`}
-        ${models.length>0 && html`<div class="field">Modelos listos <small class="cz-sub">Toca uno para verlo en tu producto</small>
-          <div class="cz-models">${models.map((m,i)=>html`<button key=${i} class="cz-model" aria-pressed=${model===i&&!!print} aria-label=${"Modelo "+(i+1)} onClick=${()=>useModel(i)}><img src=${m} alt="" loading="lazy"/><span>#${i+1}</span></button>`)}</div></div>`}
-        <div class="field">${models.length?"O sube tu propio diseño":"Tu diseño"}
-          <label class="drop">${print&&model==null?"Cambiar mi diseño":"Subir mi diseño (PNG / JPG, ideal 300 DPI)"}<input type="file" accept="image/*" onChange=${onFile}/></label>
+        <div class="field">Tu diseño
+          <label class="drop">${print?"Cambiar mi diseño":"Subir mi diseño (PNG / JPG, ideal 300 DPI)"}<input type="file" accept="image/*" onChange=${onFile}/></label>
           ${err && html`<small class="pay-warn">${err}</small>`}
           ${print && html`<div class="cz-adjust">
             ${canCover && html`<div class="chips" role="group" aria-label="Dónde va el diseño">
               <button aria-pressed=${cover} onClick=${()=>setMode(true)}>Todo el producto</button>
               <button aria-pressed=${!cover} onClick=${()=>setMode(false)}>Solo un logo</button></div>`}
             ${slider(cover?"Zoom":"Tamaño","s",cover?1:0.3,cover?3:1.6,0.05)}${slider("Horizontal","x",-0.5,0.5,0.02)}${slider("Vertical","y",-0.5,0.5,0.02)}
-            <div style=${{display:"flex",gap:8}}><button class="btn" onClick=${()=>setPos(start(cover))}>Centrar</button><button class="btn" onClick=${()=>{ setPrint(null); setModel(null); cur.current=null; }}>Quitar diseño</button></div>
+            <div style=${{display:"flex",gap:8}}><button class="btn" onClick=${()=>setPos(start(cover))}>Centrar</button><button class="btn" onClick=${()=>setPrint(null)}>Quitar diseño</button></div>
           </div>`}
-        </div>
+        </div>`}
         ${p.options && p.options.values.length>0 && html`<div class="field">${p.options.label}<div class="chips">${p.options.values.map(v=>html`<button key=${v} aria-pressed=${v===opt} onClick=${()=>setOpt(v)}>${v}</button>`)}</div></div>`}
-        <div class="field"><label for="note">Indicaciones (opcional)</label><textarea id="note" placeholder="Ej.: nombre en la parte de atrás, fondo azul…" value=${note} onInput=${e=>setNote(e.target.value)}></textarea></div>
+        <div class="field"><label for="note">Indicaciones (opcional)</label><textarea id="note" placeholder=${isModel?"Ej.: el mismo modelo pero con mi nombre…":"Ej.: nombre en la parte de atrás, fondo azul…"} value=${note} onInput=${e=>setNote(e.target.value)}></textarea></div>
         <div style=${{display:"flex",gap:12,alignItems:"end",flexWrap:"wrap",justifyContent:"space-between"}}>
           <div class="field">Cantidad<${Qty} value=${qty} set=${setQty}/></div>
           <div class="total">${money(unit*qty)}<small>${bulkOff(qty)?`${Math.round(bulkOff(qty)*100)}% OFF por volumen en el carrito`:CONFIG.bulk.length?`Desde ${Math.min(...CONFIG.bulk.map(t=>t.min))} u. tienes descuento`:""}</small></div>
         </div>
-        <button class="btn primary block" onClick=${addToCart}>Agregar al carrito</button>
+        <button class="btn primary block" onClick=${addToCart}>${isModel?`Agregar modelo #${view+1} al carrito`:"Agregar al carrito"}</button>
       </div>
     </div></section>
     ${cat && html`<section class="section wrap" style=${{paddingTop:0}}>

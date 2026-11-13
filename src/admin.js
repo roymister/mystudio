@@ -32,7 +32,7 @@ function ModelsInput({value, onChange}){
     if(files.length>room) setErr(`Solo se agregaron ${room}: el máximo es ${MAX_MODELS} modelos por producto.`);
     onChange([...list,...out]); setBusy(false); };
   const move=(i,d)=>{ const n=[...list], j=i+d; if(j<0||j>=n.length) return; [n[i],n[j]]=[n[j],n[i]]; onChange(n); };
-  return html`<div class="af"><span>Modelos listos (diseños ya hechos que el cliente puede elegir)</span>
+  return html`<div class="af"><span>Modelos listos (fotos de trabajos ya hechos que el cliente puede elegir)</span>
     <div class="models-in">
       ${list.map((m,i)=>html`<div class="mi" key=${i}><img src=${m} alt=${"Modelo "+(i+1)}/>
         <div class="mi-acts"><button class="btn sm" onClick=${()=>move(i,-1)} disabled=${i===0} aria-label="Mover a la izquierda">←</button>
@@ -40,7 +40,7 @@ function ModelsInput({value, onChange}){
           <button class="btn sm" onClick=${()=>move(i,1)} disabled=${i===list.length-1} aria-label="Mover a la derecha">→</button></div></div>`)}
       ${list.length<MAX_MODELS && html`<label class="mi add">${busy?"Procesando…":"+ Agregar fotos"}<input type="file" accept="image/*" multiple onChange=${pick} hidden/></label>`}
     </div>
-    <small>${list.length}/${MAX_MODELS} · Puedes elegir varias fotos a la vez. Usa la imagen del diseño (de frente, sin fondo si es posible).</small>
+    <small>${list.length}/${MAX_MODELS} · Puedes elegir varias fotos a la vez. Sube fotos del producto ya terminado; el cliente las ve en un carrusel.</small>
     ${err && html`<small class="err">${err}</small>`}</div>`;
 }
 function ConfirmButton({label="Eliminar", ask="¿Eliminar?", onYes}){

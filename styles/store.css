@@ -360,3 +360,13 @@ input[type=color]{width:40px;height:32px;border:1px solid var(--line);border-rad
 .cz-arrow:hover{color:var(--primary);border-color:var(--primary)}
 .cz-arrow.prev{left:0}.cz-arrow.next{right:0}
 .cz-count{font-size:12.5px;font-weight:700;color:var(--ink);background:#fff;border:1px solid var(--line);border-radius:999px;padding:4px 12px}
+/* carrusel de modelos listos (fotos) */
+.cz-slider{width:100%;max-width:440px;aspect-ratio:1;overflow:hidden;border-radius:14px;background:#fff;touch-action:pan-y;user-select:none}
+.cz-track{display:flex;height:100%;transition:transform .45s cubic-bezier(.22,.8,.3,1)}
+.cz-slide{flex:0 0 100%;height:100%;display:grid;place-items:center}
+.cz-slide img{width:100%;height:100%;object-fit:contain;pointer-events:none}
+.cz-dots{display:flex;gap:6px;justify-content:center;flex-wrap:wrap}
+.cz-dot{width:9px;height:9px;border-radius:999px;border:0;padding:0;background:#C9D0DE;cursor:pointer;transition:width .25s,background .25s}
+.cz-dot[aria-pressed="true"]{width:22px;background:var(--primary)}
+button.drop{background:#fff;width:100%;font:inherit;font-weight:700}
+@media (prefers-reduced-motion:reduce){.cz-track{transition:none}}
