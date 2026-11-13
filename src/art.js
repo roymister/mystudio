@@ -45,23 +45,30 @@ const ART={
   sandal:{area:[82,40,76,166,34],draw:(c)=>`<path d="M120 22 Q170 22 172 76 Q174 118 160 150 Q150 176 156 200 Q158 224 120 224 Q82 224 84 200 Q90 176 80 150 Q66 118 68 76 Q70 22 120 22 Z" fill="#1B2232" opacity=".18" transform="translate(4 4)"/><path d="M120 22 Q170 22 172 76 Q174 118 160 150 Q150 176 156 200 Q158 224 120 224 Q82 224 84 200 Q90 176 80 150 Q66 118 68 76 Q70 22 120 22 Z" fill="${c}" stroke="${S}" stroke-width="2"/>`,top:`<path d="M120 58 Q96 82 78 118 M120 58 Q144 82 162 118" fill="none" stroke="#1B2232" stroke-width="12" stroke-linecap="round"/><circle cx="120" cy="58" r="7" fill="#1B2232"/>`},
   fan:{area:[52,26,136,136,68],draw:(c)=>`<rect x="112" y="150" width="16" height="78" rx="8" fill="#C8B48A" stroke="${S}" stroke-width="2"/><circle cx="120" cy="94" r="70" fill="${c}" stroke="${S}" stroke-width="2"/>`}
 };
-function designSVG(id,[x,y,w,h,r],print){
+function designSVG(id,[x,y,w,h,r],print,pos){
   const clip=`<clipPath id="${id}c"><rect x="${x}" y="${y}" width="${w}" height="${h}" rx="${r}"/></clipPath>`;
+  if(print && pos){ // personalizador 2D: diseño completo, con tamaño (s) y desplazamiento (x, y en fracción del área)
+    const iw=w*pos.s, ih=h*pos.s, ix=x+(w-iw)/2+(pos.x||0)*w, iy=y+(h-ih)/2+(pos.y||0)*h;
+    return {defs:clip, body:`<g clip-path="url(#${id}c)"><image href="${print}" x="${ix}" y="${iy}" width="${iw}" height="${ih}" preserveAspectRatio="xMidYMid meet"/></g>`};
+  }
   if(print) return {defs:clip, body:`<image href="${print}" x="${x}" y="${y}" width="${w}" height="${h}" preserveAspectRatio="xMidYMid slice" clip-path="url(#${id}c)"/>`};
   const cx=x+w/2, cy=y+h/2, rr=Math.min(w,h)*0.36;
   return {defs:clip+`<linearGradient id="${id}g" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#3B3FD8"/><stop offset="1" stop-color="#E2457A"/></linearGradient>`,
     body:`<g clip-path="url(#${id}c)"><circle cx="${cx}" cy="${cy}" r="${rr}" fill="url(#${id}g)"/><path d="M${cx-rr*.55} ${cy+rr*.35} L${cx-rr*.1} ${cy-rr*.35} L${cx+rr*.15} ${cy+rr*.05} L${cx+rr*.35} ${cy-rr*.15} L${cx+rr*.65} ${cy+rr*.35} Z" fill="#fff" opacity=".9"/><circle cx="${cx+rr*.35}" cy="${cy-rr*.45}" r="${rr*.14}" fill="#FFD166"/></g>`};
 }
 let artUid=0;
-function artMarkup(type,{color="#FFFFFF",print,inner,thermo,pattern}={}){
-  const A=ART[type]||ART.tee, id="a"+(++artUid), d=designSVG(id,A.area,print);
+function artMarkup(type,{color="#FFFFFF",print,printPos,inner,thermo,pattern}={}){
+  const A=ART[type]||ART.tee, id="a"+(++artUid), d=designSVG(id,A.area,print,printPos);
   const pat = pattern ? `<pattern id="${id}p" width="24" height="24" patternUnits="userSpaceOnUse"><path d="M0 18 L12 6 L24 18" fill="none" stroke="#fff" stroke-width="5" opacity=".75"/></pattern>` : "";
   const body = A.draw(color,{inner,thermo});
   const patLayer = pattern && (type==="polo"||type==="tee") ? `<clipPath id="${id}k">${body.match(/<path d="[^"]+"/)[0]}/></clipPath><rect width="240" height="240" fill="url(#${id}p)" clip-path="url(#${id}k)"/>` : "";
   const over = A.shade && A.over ? A.over.replace("<path ",`<path fill="url(#${id}s)" `) : "";
   return `<svg viewBox="0 0 240 240" aria-hidden="true"><defs>${d.defs}${pat}${A.shade?shade(id):""}</defs><ellipse cx="120" cy="228" rx="70" ry="6" fill="#000" opacity=".07"/>${body}${patLayer}${pattern&&!print?"":d.body}${over}${A.top||""}</svg>`;
 }
+/* ¿La ilustración cambia de color? (las de vidrio, metal o piedra no) */
+const artUsesColor = type => { const A=ART[type]; return !!A && A.draw("#ABC123",{}).includes("#ABC123"); };
 function ProductArt(props){
-  const m = useMemo(()=>artMarkup(props.type,props),[props.type,props.color,props.print,props.inner,props.thermo,props.pattern]);
+  const pp = props.printPos;
+  const m = useMemo(()=>artMarkup(props.type,props),[props.type,props.color,props.print,props.inner,props.thermo,props.pattern,pp&&pp.s,pp&&pp.x,pp&&pp.y]);
   return html`<span class="art-svg" dangerouslySetInnerHTML=${{__html:m}}></span>`;
 }

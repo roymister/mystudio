@@ -319,12 +319,15 @@ function Marquee({onOpen}){
 }
 
 /* ---------- Productos ---------- */
-function ProductCard({p, onOpen}){
+/* Cada producto abre su página de personalización: 3D si tiene modelo, si no la vista previa 2D */
+const productRoute = p => p.sim ? simRoute(p) : "personalizar/"+p.id;
+function ProductCard({p}){
+  const href = "#"+productRoute(p);
   return html`<article class="card">
-    <div class="ph">${(p.tag||p.discount>0) && html`<span class="ribbon">${p.discount>0 && html`<span class="tag off">−${p.discount}%</span>`}${p.tag && html`<span class="tag pink">${p.tag}</span>`}</span>`}<${ProductMedia} p=${p}/></div>
-    <div class="body"><h3>${p.name}</h3><p>${p.desc}</p>
+    <a class="ph" href=${href} aria-label=${"Personalizar "+p.name}>${(p.tag||p.discount>0) && html`<span class="ribbon">${p.discount>0 && html`<span class="tag off">−${p.discount}%</span>`}${p.tag && html`<span class="tag pink">${p.tag}</span>`}</span>`}<${ProductMedia} p=${p}/></a>
+    <div class="body"><h3><a class="card-link" href=${href}>${p.name}</a></h3><p>${p.desc}</p>
       <div class="cfoot"><${Price} p=${p}/>
-        ${p.sim ? html`<a class="btn primary" href=${"#"+simRoute(p)}>Diseñar en 3D</a>` : html`<button class="btn primary" onClick=${()=>onOpen(p)}>Ordenar</button>`}</div></div>
+        <a class="btn primary" href=${href}>${p.sim?"Diseñar en 3D":"Ordenar"}</a></div></div>
   </article>`;
 }
 function ProductGrid({items, onOpen}){
@@ -336,24 +339,47 @@ function Qty({value,set}){
     <input type="number" min="1" value=${value} onInput=${e=>set(Math.max(1,parseInt(e.target.value)||1))} aria-label="Cantidad"/>
     <button onClick=${()=>set(value+1)} aria-label="Más">+</button></div>`;
 }
-function ProductModal({p, onClose}){
+/* ---------- Personalizador 2D (productos sin modelo 3D) ---------- */
+const BASE_COLORS = [["Blanco","#FFFFFF"],["Negro","#1B1B1B"],["Gris","#C9CCCF"],["Rojo","#C8202F"],["Azul marino","#1C2A4A"],["Celeste","#A9D6F0"],["Rosa","#F4B6CC"],["Amarillo","#F7D84A"],["Verde menta","#B5E3C8"]];
+function CustomPage({p, onOpen}){
   const {add} = useCart();
+  const usesColor = artUsesColor(p.art);
+  const [color,setColor] = useState(()=>BASE_COLORS.find(c=>c[1].toUpperCase()===(p.color||"").toUpperCase()) || BASE_COLORS[0]);
   const [opt,setOpt] = useState(p.options&&p.options.values.length?p.options.values[0]:null);
-  const [qty,setQty] = useState(1), [print,setPrint] = useState(null), [note,setNote] = useState("");
-  useEffect(()=>{ const k=e=>{ if(e.key==="Escape") onClose(); }; addEventListener("keydown",k); return ()=>removeEventListener("keydown",k); },[]);
-  const onFile = async e => { const f=e.target.files[0]; if(!f) return; try{ setPrint(await compressImage(f,600,0.85)); }catch(_){} };
+  const [qty,setQty] = useState(1), [print,setPrint] = useState(null), [note,setNote] = useState(""), [err,setErr] = useState("");
+  const [pos,setPos] = useState({s:0.8,x:0,y:0});
+  const onFile = async e => { const f=e.target.files[0]; e.target.value=""; if(!f) return; setErr("");
+    try{ setPrint(await compressImage(f,700,0.85)); setPos({s:0.8,x:0,y:0}); }catch(_){ setErr("No se pudo leer esa imagen. Prueba con un JPG o PNG."); } };
   const unit=finalPrice(p), cat=CATEGORIES.find(c=>c.id===p.cat);
-  const addToCart = () => { add({ id:p.id, name:p.name, unit, qty, art:p.art, color:p.color, inner:p.inner, photo:p.photo, print,
-    detail:[opt && `${p.options.label}: ${opt}`, print?"con diseño subido":"diseño por WhatsApp", note && `Nota: ${note}`].filter(Boolean).join(" · ") }); onClose(); };
-  return html`<div class="overlay" onClick=${e=>{ if(e.target===e.currentTarget) onClose(); }}>
-    <div class="modal" role="dialog" aria-modal="true" aria-label=${p.name}>
-      <div class="ph"><${ProductMedia} p=${p} print=${p.photo?null:print}/>${p.photo && print && html`<img class="mini-print" src=${print} alt="Tu diseño"/>`}</div>
-      <div class="info" style=${{position:"relative"}}>
-        <button class="x" onClick=${onClose} aria-label="Cerrar">×</button>
-        <div><span class="eyebrow">${cat?cat.name:""}</span><h2>${p.name}</h2><p class="lead">${p.desc}</p></div>
-        <div style=${{display:"flex",gap:8,alignItems:"center"}}><${Price} p=${p}/>${p.discount>0 && html`<span class="tag off">−${p.discount}%</span>`}</div>
+  const artProps = {type:p.art, color:usesColor?color[1]:p.color, inner:p.inner, thermo:p.thermo, print, printPos:print?pos:null};
+  const addToCart = () => {
+    const thumb = "data:image/svg+xml;charset=utf-8,"+encodeURIComponent(artMarkup(p.art, artProps));
+    add({ id:p.id, name:p.name, unit, qty, art:p.art, color:artProps.color, inner:p.inner, thumb,
+      detail:[usesColor && `Color: ${color[0]}`, opt && `${p.options.label}: ${opt}`, print?"con diseño subido":"diseño por WhatsApp", note && `Nota: ${note}`].filter(Boolean).join(" · ") });
+  };
+  const slider = (label,key,min,max,step) => html`<label class="cz-range"><span>${label}</span>
+    <input type="range" min=${min} max=${max} step=${step} value=${pos[key]} onInput=${e=>setPos({...pos,[key]:+e.target.value})}/></label>`;
+  return html`<div>
+    <${PageHead} title=${p.name} crumb=${html`${cat?html`<a href=${"#"+cat.id}>${cat.name}</a> / `:""}Personalizar`} text=${p.desc}/>
+    <section class="section wrap"><div class="cz">
+      <div class="cz-stage">
+        <div class="cz-art"><${ProductArt} ...${artProps}/></div>
+        <small class="cz-hint">${print?"Vista previa con tu diseño. El acabado final puede variar ligeramente.":"Sube tu diseño y mira cómo queda."}</small>
+        ${p.photo && html`<div class="cz-photo"><${Photo} src=${p.photo} alt=${"Foto de "+p.name} fallback=${null}/><span>Foto real del producto</span></div>`}
+      </div>
+      <div class="cz-panel">
+        <div style=${{display:"flex",gap:8,alignItems:"center"}}><${Price} p=${p} size=${22}/>${p.discount>0 && html`<span class="tag off">−${p.discount}%</span>`}</div>
+        ${usesColor && html`<div class="field">Color: <b>${color[0]}</b>
+          <div class="cz-colors">${BASE_COLORS.map(c=>html`<button key=${c[1]} class="cz-sw" style=${{background:c[1]}} aria-pressed=${c[1]===color[1]} aria-label=${c[0]} title=${c[0]} onClick=${()=>setColor(c)}></button>`)}</div></div>`}
+        <div class="field">Tu diseño
+          <label class="drop">${print?"Cambiar mi diseño":"Subir mi diseño (PNG / JPG, ideal 300 DPI)"}<input type="file" accept="image/*" onChange=${onFile}/></label>
+          ${err && html`<small class="pay-warn">${err}</small>`}
+          ${print && html`<div class="cz-adjust">
+            ${slider("Tamaño","s",0.3,1.6,0.05)}${slider("Horizontal","x",-0.5,0.5,0.02)}${slider("Vertical","y",-0.5,0.5,0.02)}
+            <div style=${{display:"flex",gap:8}}><button class="btn" onClick=${()=>setPos({s:0.8,x:0,y:0})}>Centrar</button><button class="btn" onClick=${()=>setPrint(null)}>Quitar diseño</button></div>
+          </div>`}
+        </div>
         ${p.options && p.options.values.length>0 && html`<div class="field">${p.options.label}<div class="chips">${p.options.values.map(v=>html`<button key=${v} aria-pressed=${v===opt} onClick=${()=>setOpt(v)}>${v}</button>`)}</div></div>`}
-        <label class="drop">${print?"Cambiar mi diseño":"Subir mi diseño (PNG / JPG, ideal 300 DPI)"}<input type="file" accept="image/*" onChange=${onFile}/></label>
         <div class="field"><label for="note">Indicaciones (opcional)</label><textarea id="note" placeholder="Ej.: nombre en la parte de atrás, fondo azul…" value=${note} onInput=${e=>setNote(e.target.value)}></textarea></div>
         <div style=${{display:"flex",gap:12,alignItems:"end",flexWrap:"wrap",justifyContent:"space-between"}}>
           <div class="field">Cantidad<${Qty} value=${qty} set=${setQty}/></div>
@@ -361,7 +387,12 @@ function ProductModal({p, onClose}){
         </div>
         <button class="btn primary block" onClick=${addToCart}>Agregar al carrito</button>
       </div>
-    </div></div>`;
+    </div></section>
+    ${cat && html`<section class="section wrap" style=${{paddingTop:0}}>
+      <div class="sec-head"><h2>Más ${cat.name.toLowerCase()}</h2><a class="link" href=${"#"+cat.id}>Ver todo →</a></div>
+      <${ProductGrid} items=${CATALOG.filter(x=>x.cat===cat.id&&x.id!==p.id).slice(0,4)} onOpen=${onOpen}/>
+    </section>`}
+  </div>`;
 }
 
 /* ---------- Carrito ---------- */
@@ -563,7 +594,7 @@ function App(){
   const [saved,setSaved] = useState(DEFAULT_DATA);     // última versión publicada
   const [ready,setReady] = useState(false);
   const [canEdit,setCanEdit] = useState(false), [admin,setAdmin] = useState(false), [login,setLogin] = useState(false);
-  const [query,setQuery] = useState(""), [modal,setModal] = useState(null);
+  const [query,setQuery] = useState("");
   useEffect(()=>{ let done=false; const t=setTimeout(()=>{ if(!done){done=true;setReady(true);} },2500);
     loadPublishedData().then(d=>{ if(done&&d===DEFAULT_DATA) return; done=true; clearTimeout(t); setData(d); setSaved(d); setReady(true); }); return ()=>clearTimeout(t); },[]);
   useEffect(()=>{ (async()=>{
@@ -578,10 +609,12 @@ function App(){
     if(IN_CLAUDE||ghLoad()) { if(canEdit||!IN_CLAUDE) setAdmin(true); } else setLogin(true); },[hash,canEdit,authReady]);
   applyData(data);
   const routes=[...fixedRoutes,...CATEGORIES.map(c=>c.id)];
-  const route = routes.includes(hash) ? hash : "inicio";
-  const onOpen = p => setModal(p);
+  const custom = hash.startsWith("personalizar/") ? productById(decodeURIComponent(hash.slice(13))) : null;
+  const route = custom ? custom.cat : routes.includes(hash) ? hash : "inicio";
+  const onOpen = p => go(productRoute(p));
   let page;
-  if(route==="inicio") page=html`<${Home} onOpen=${onOpen}/>`;
+  if(custom) page=html`<${CustomPage} key=${custom.id} p=${custom} onOpen=${onOpen}/>`;
+  else if(route==="inicio") page=html`<${Home} onOpen=${onOpen}/>`;
   else if(route==="catalogo") page=html`<${CatalogPage} onOpen=${onOpen}/>`;
   else if(route==="polos") page=html`<${SimPage} key="polo" kind="polo" onOpen=${onOpen}/>`;
   else if(route==="tazas-3d") page=html`<${SimPage} key="taza" kind="taza" onOpen=${onOpen}/>`;
@@ -594,9 +627,8 @@ function App(){
     <${TopBar} canEdit=${canEdit} onAdmin=${()=>setAdmin(true)}/>
     <${Header} query=${query} setQuery=${setQuery}/><${Nav} route=${route}/>
     ${canEdit && dirty && !admin && html`<div class="draftbar"><div class="wrap"><span>Estás viendo un <b>borrador</b>: tus clientes aún no ven estos cambios.</span><button class="btn primary" onClick=${()=>setAdmin(true)}>Volver al panel y publicar</button></div></div>`}
-    <main key=${route}>${page}</main>
+    <main key=${custom?hash:route}>${page}</main>
     <${Footer}/>
-    ${modal && html`<${ProductModal} p=${modal} onClose=${()=>setModal(null)}/>`}
     <${CartDrawer}/>
     ${admin && html`<${AdminPanel} data=${data} setData=${setData} saved=${saved} setSaved=${setSaved} onClose=${()=>{ setAdmin(false); if(location.hash==="#admin") history.replaceState(null,"",location.pathname+location.search); }} onLogout=${FB?()=>{ FB.signOut(); setAdmin(false); }:IN_CLAUDE?null:()=>{ ghSave(null); setCanEdit(false); setAdmin(false); }}/>`}
     ${login && FB && html`<${GoogleLogin} onClose=${()=>{ setLogin(false); history.replaceState(null,"",location.pathname+location.search); }} onOk=${()=>{ setLogin(false); setCanEdit(true); setAdmin(true); }}/>`}
