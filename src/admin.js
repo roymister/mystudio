@@ -129,30 +129,76 @@ function ProductEditor({p, cats, onChange, onClose}){
   </div>`;
 }
 
+/* Filtros rápidos del listado de productos (también son las tarjetas del resumen) */
+const P_FILTERS=[
+  ["all","Total",p=>true],
+  ["visible","Visibles",p=>!p.hidden],
+  ["hidden","Ocultos",p=>!!p.hidden],
+  ["featured","Destacados",p=>!!p.featured],
+  ["offer","Con oferta",p=>p.discount>0],
+  ["sim","Con 3D",p=>!!p.sim],
+  ["models","Con modelos",p=>(p.models||[]).length>0],
+  ["nophoto","Sin foto",p=>!p.photo],
+];
+const SIM_NAMES={polo:"Polo 3D",taza:"Taza 3D",mousepad:"Mousepad 3D"};
 function ProductsTab({d, update}){
   const [q,setQ]=useState(""), [cat,setCat]=useState("all"), [open,setOpen]=useState(null);
-  const list=d.products.filter(p=>(cat==="all"||p.cat===cat)&&(p.name.toLowerCase().includes(q.toLowerCase())));
+  const [state,setState]=useState("all"), [sort,setSort]=useState("store");
+  const catName=id=>(d.categories.find(c=>c.id===id)||{name:"Sin categoría"}).name;
+  const test=(P_FILTERS.find(f=>f[0]===state)||P_FILTERS[0])[2];
+  const qq=q.trim().toLowerCase();
+  let list=d.products.filter(p=>(cat==="all"||p.cat===cat) && test(p) && (!qq || (p.name+" "+(p.desc||"")+" "+(p.tag||"")).toLowerCase().includes(qq)));
+  if(sort==="name") list=[...list].sort((a,b)=>a.name.localeCompare(b.name,"es"));
+  if(sort==="up") list=[...list].sort((a,b)=>finalPrice(a)-finalPrice(b));
+  if(sort==="down") list=[...list].sort((a,b)=>finalPrice(b)-finalPrice(a));
+  const inCat=d.products.filter(p=>cat==="all"||p.cat===cat);
   const change=np=>update(x=>{ x.products=x.products.map(p=>p.id===np.id?np:p); });
+  const toggle=(p,k)=>update(x=>{ const y=x.products.find(z=>z.id===p.id); if(y) y[k]=!y[k]; });
+  const move=(p,k)=>update(x=>{ const i=x.products.findIndex(y=>y.id===p.id), j=i+k; if(i<0||j<0||j>=x.products.length) return; [x.products[i],x.products[j]]=[x.products[j],x.products[i]]; });
   const addNew=()=>{ const id=uniqueId("producto nuevo",d.products.map(p=>p.id));
     const c=cat!=="all"?cat:(d.categories[0]&&d.categories[0].id);
     update(x=>{ x.products.unshift({id,cat:c,name:"Producto nuevo",price:20,discount:0,desc:"Describe aquí el producto.",tag:"Nuevo",art:"tee",color:"#FFFFFF",inner:null,thermo:false,pattern:false,options:null,photo:null,featured:false,hidden:false,sim:false}); });
-    setOpen(id); };
+    setState("all"); setOpen(id); };
   const dup=p=>{ const id=uniqueId(p.name+" copia",d.products.map(x=>x.id)); update(x=>{ const i=x.products.findIndex(y=>y.id===p.id); x.products.splice(i+1,0,{...clone(p),id,name:p.name+" (copia)",sim:false}); }); setOpen(id); };
+  const prices=inCat.map(finalPrice);
   return html`<div class="atab">
-    <div class="atools"><input class="input" placeholder="Buscar producto…" value=${q} onInput=${e=>setQ(e.target.value)}/>
-      <select value=${cat} onChange=${e=>setCat(e.target.value)}><option value="all">Todas las categorías</option>${d.categories.map(c=>html`<option key=${c.id} value=${c.id}>${c.name}</option>`)}</select>
+    <div class="pstats">${P_FILTERS.map(([k,l,f])=>{ const n=inCat.filter(f).length;
+      return html`<button key=${k} class=${"pstat"+(k==="nophoto"&&n?" warn":"")} aria-pressed=${state===k} onClick=${()=>setState(state===k&&k!=="all"?"all":k)}><b>${n}</b><span>${l}</span></button>`; })}</div>
+    ${prices.length>0 && html`<p class="note-cfg">${cat==="all"?"Toda la tienda":catName(cat)} · precios desde ${money(Math.min(...prices))} hasta ${money(Math.max(...prices))} · promedio ${money(prices.reduce((a,b)=>a+b,0)/prices.length)}</p>`}
+    <div class="atools"><input class="input" placeholder="Buscar por nombre, descripción o etiqueta…" value=${q} onInput=${e=>setQ(e.target.value)}/>
+      <select value=${cat} onChange=${e=>setCat(e.target.value)} aria-label="Categoría"><option value="all">Todas las categorías</option>${d.categories.map(c=>html`<option key=${c.id} value=${c.id}>${c.name} (${d.products.filter(p=>p.cat===c.id).length})</option>`)}</select>
+      <select value=${sort} onChange=${e=>setSort(e.target.value)} aria-label="Ordenar"><option value="store">Orden de la tienda</option><option value="name">Nombre A–Z</option><option value="up">Precio: menor a mayor</option><option value="down">Precio: mayor a menor</option></select>
       <button class="btn primary" onClick=${addNew} disabled=${!d.categories.length}>+ Nuevo producto</button></div>
-    <p class="note-cfg">${d.products.length} productos · ${d.products.filter(p=>p.hidden).length} ocultos</p>
-    <div class="alist">${list.map(p=>html`<div class=${"arow-item"+(p.hidden?" off":"")} key=${p.id}>
-      <div class="ahead">
+    <p class="note-cfg">Mostrando ${list.length} de ${d.products.length} productos${state!=="all"?` · filtro: ${P_FILTERS.find(f=>f[0]===state)[1].toLowerCase()}`:""}${(state!=="all"||cat!=="all"||qq)?html` · <button class="linkbtn" onClick=${()=>{ setState("all"); setCat("all"); setQ(""); }}>Quitar filtros</button>`:""}</p>
+    <div class="alist">${list.map(p=>{ const fp=finalPrice(p), nm=(p.models||[]).length, opts=p.options&&p.options.values&&p.options.values.length?p.options:null;
+      return html`<div class=${"arow-item"+(p.hidden?" off":"")} key=${p.id}>
+      <div class="ahead pro">
         <div class="th"><${Photo} src=${p.photo} fallback=${html`<${ProductArt} type=${p.art} color=${p.color} inner=${p.inner} thermo=${p.thermo}/>`}/></div>
-        <div class="meta"><b>${p.name}</b><small>${(d.categories.find(c=>c.id===p.cat)||{name:"Sin categoría"}).name} · ${money(p.price)}${p.discount>0?` · −${p.discount}% = ${money(finalPrice(p))}`:""}${p.hidden?" · Oculto":""}${p.featured?" · Destacado":""}</small></div>
-        <div class="acts"><button class="btn sm" onClick=${()=>setOpen(open===p.id?null:p.id)}>${open===p.id?"Cerrar":"Editar"}</button>
+        <div class="meta">
+          <div class="pname"><b>${p.name}</b>${p.tag && html`<span class="tag pink">${p.tag}</span>`}</div>
+          <small>${catName(p.cat)} · ID: ${p.id}</small>
+          <div class="pbadges">
+            <span class=${"pb "+(p.hidden?"bad":"ok")}>${p.hidden?"Oculto":"Visible"}</span>
+            ${p.featured && html`<span class="pb star">★ Destacado</span>`}
+            ${p.sim && html`<span class="pb info">${SIM_NAMES[simKind(p)]||"3D"}</span>`}
+            ${nm>0 && html`<span class="pb info">${nm} modelo${nm>1?"s":""}</span>`}
+            ${opts && html`<span class="pb" title=${opts.values.join(", ")}>${opts.label}: ${opts.values.length} opciones</span>`}
+            ${!p.photo && html`<span class="pb warn">Sin foto</span>`}
+            ${!(p.desc||"").trim() && html`<span class="pb warn">Sin descripción</span>`}
+          </div>
+        </div>
+        <div class="pprice"><b>${money(fp)}</b>${p.discount>0 && html`<small><s>${money(p.price)}</s> <span class="tag off">−${p.discount}%</span></small>`}</div>
+        <div class="acts">
+          <button class=${"btn sm qt"+(p.hidden?"":" on")} onClick=${()=>toggle(p,"hidden")} title=${p.hidden?"Mostrar en la tienda":"Ocultar de la tienda"} aria-label=${p.hidden?"Mostrar en la tienda":"Ocultar de la tienda"}>${p.hidden?"🙈":"👁"}</button>
+          <button class=${"btn sm qt"+(p.featured?" on":"")} onClick=${()=>toggle(p,"featured")} title=${p.featured?"Quitar de destacados":"Marcar como destacado"} aria-label=${p.featured?"Quitar de destacados":"Marcar como destacado"}>${p.featured?"★":"☆"}</button>
+          ${sort==="store" && html`<button class="btn sm" onClick=${()=>move(p,-1)} title="Subir en la tienda" aria-label="Subir">↑</button><button class="btn sm" onClick=${()=>move(p,1)} title="Bajar en la tienda" aria-label="Bajar">↓</button>`}
+          <button class="btn sm" onClick=${()=>setOpen(open===p.id?null:p.id)}>${open===p.id?"Cerrar":"Editar"}</button>
           <button class="btn sm" onClick=${()=>dup(p)}>Duplicar</button>
+          <a class="btn sm" href=${"#"+productRoute(p)} target="_blank" rel="noopener" title="Ver en la tienda">Ver</a>
           <${ConfirmButton} onYes=${()=>update(x=>{ x.products=x.products.filter(y=>y.id!==p.id); })}/></div>
       </div>
       ${open===p.id && html`<${ProductEditor} p=${p} cats=${d.categories} onChange=${change} onClose=${()=>setOpen(null)}/>`}
-    </div>`)}${!list.length && html`<p class="note-cfg">No hay productos con ese filtro.</p>`}</div>
+    </div>`; })}${!list.length && html`<p class="note-cfg">No hay productos con ese filtro.</p>`}</div>
   </div>`;
 }
 

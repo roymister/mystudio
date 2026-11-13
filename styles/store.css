@@ -384,3 +384,28 @@ button.drop{background:#fff;width:100%;font:inherit;font-weight:700}
 .crop-quick{display:flex;gap:8px}
 .crop-acts{display:flex;gap:8px;justify-content:flex-end;align-self:stretch;flex-wrap:wrap}
 .cropper .err{color:var(--pink);font-weight:600}
+/* panel del dueño: listado detallado de productos */
+.pstats{display:grid;grid-template-columns:repeat(auto-fill,minmax(108px,1fr));gap:8px}
+.pstat{display:flex;flex-direction:column;align-items:flex-start;gap:2px;border:1px solid var(--line);background:#fff;border-radius:12px;padding:10px 12px;cursor:pointer;text-align:left;font:inherit}
+.pstat b{font-size:20px;line-height:1.1;color:var(--ink)}
+.pstat span{font-size:11.5px;font-weight:700;color:var(--muted)}
+.pstat:hover{border-color:var(--primary)}
+.pstat[aria-pressed="true"]{border-color:var(--primary);box-shadow:inset 0 0 0 1px var(--primary);background:#F3F4FF}
+.pstat.warn b{color:#B45309}
+.linkbtn{border:0;background:none;padding:0;color:var(--primary);font:inherit;font-weight:700;cursor:pointer;text-decoration:underline}
+.ahead.pro{align-items:flex-start}
+.ahead.pro .th{width:64px;height:64px}
+.pname{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.pbadges{display:flex;gap:6px;flex-wrap:wrap;margin-top:6px}
+.pb{font-size:11px;font-weight:700;border-radius:6px;padding:2px 8px;background:var(--soft);color:#3A4358;border:1px solid var(--line);white-space:nowrap}
+.pb.ok{background:#DCFCE7;color:#166534;border-color:#BBF7D0}
+.pb.bad{background:#F1F5F9;color:#475569}
+.pb.star{background:#FEF3C7;color:#92400E;border-color:#FDE68A}
+.pb.info{background:var(--sky-soft);color:var(--sky-ink);border-color:#CFE5FA}
+.pb.warn{background:#FFF7ED;color:#C2410C;border-color:#FED7AA}
+.pprice{display:flex;flex-direction:column;align-items:flex-end;min-width:96px}
+.pprice b{font-size:16px}
+.pprice small{color:var(--muted);display:flex;gap:6px;align-items:center}
+.btn.qt{min-width:34px;font-size:14px;padding:4px 8px}
+.btn.qt.on{border-color:var(--primary);color:var(--primary)}
+@media (max-width:640px){.pprice{align-items:flex-start;min-width:0}.ahead.pro .acts{width:100%}}
