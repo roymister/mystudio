@@ -354,3 +354,9 @@ input[type=color]{width:40px;height:32px;border:1px solid var(--line);border-rad
 .models-in .mi-acts{display:flex;justify-content:space-between;gap:2px}
 .models-in .mi-acts .btn{padding:2px 8px;min-width:0}
 .models-in .mi.add{align-items:center;justify-content:center;aspect-ratio:1;border:1.5px dashed var(--line);color:var(--primary);cursor:pointer;text-align:center;font-weight:700}
+/* flechas para cambiar de modelo */
+.cz-view{position:relative;width:100%;display:flex;justify-content:center}
+.cz-arrow{position:absolute;top:50%;transform:translateY(-50%);z-index:2;width:44px;height:44px;border-radius:999px;border:1px solid var(--line);background:#fff;color:var(--ink);font-size:28px;line-height:1;cursor:pointer;box-shadow:0 4px 14px rgba(27,34,50,.12);display:grid;place-items:center;padding:0 0 4px}
+.cz-arrow:hover{color:var(--primary);border-color:var(--primary)}
+.cz-arrow.prev{left:0}.cz-arrow.next{right:0}
+.cz-count{font-size:12.5px;font-weight:700;color:var(--ink);background:#fff;border:1px solid var(--line);border-radius:999px;padding:4px 12px}

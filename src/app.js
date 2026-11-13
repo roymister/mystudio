@@ -354,9 +354,11 @@ function CustomPage({p, onOpen}){
   const setMode = c => { setCover(c); setPos(start(c)); };
   const models = (p.models||[]).filter(Boolean);
   const [model,setModel] = useState(null);       // índice del modelo listo elegido (null = diseño propio)
-  const useModel = i => { setPrint(models[i]); setModel(i); setPos(start(cover)); setErr(""); };
+  const cur = useRef(null);                       // modelo actual al instante (clics rápidos en las flechas)
+  const useModel = i => { cur.current=i; setPrint(models[i]); setModel(i); setPos(start(cover)); setErr(""); };
+  const stepModel = d => { const n=models.length; if(!n) return; const c = cur.current==null ? (d>0?-1:0) : cur.current; useModel((c+d+n)%n); };
   const onFile = async e => { const f=e.target.files[0]; e.target.value=""; if(!f) return; setErr("");
-    try{ setPrint(await compressImage(f,900,0.85)); setModel(null); setPos(start(cover)); }catch(_){ setErr("No se pudo leer esa imagen. Prueba con un JPG o PNG."); } };
+    try{ setPrint(await compressImage(f,900,0.85)); setModel(null); cur.current=null; setPos(start(cover)); }catch(_){ setErr("No se pudo leer esa imagen. Prueba con un JPG o PNG."); } };
   const unit=finalPrice(p), cat=CATEGORIES.find(c=>c.id===p.cat);
   const artProps = {type:p.art, color:usesColor?color[1]:p.color, inner:p.inner, thermo:p.thermo, print, printPos:print?{...pos,full:cover}:null};
   const addToCart = () => {
@@ -372,7 +374,12 @@ function CustomPage({p, onOpen}){
     <${PageHead} title=${p.name} crumb=${html`${cat?html`<a href=${"#"+cat.id}>${cat.name}</a> / `:""}Personalizar`} text=${p.desc}/>
     <section class="section wrap"><div class="cz">
       <div class="cz-stage">
-        <div class="cz-art"><${ProductArt} ...${artProps}/></div>
+        <div class="cz-view">
+          ${models.length>1 && html`<button class="cz-arrow prev" onClick=${()=>stepModel(-1)} aria-label="Modelo anterior">‹</button>`}
+          <div class="cz-art"><${ProductArt} ...${artProps}/></div>
+          ${models.length>1 && html`<button class="cz-arrow next" onClick=${()=>stepModel(1)} aria-label="Modelo siguiente">›</button>`}
+        </div>
+        ${models.length>0 && html`<div class="cz-count">${model!=null&&print?`Modelo ${model+1} de ${models.length}`:`${models.length} modelo${models.length>1?"s":""} listo${models.length>1?"s":""} · usa las flechas`}</div>`}
         <small class="cz-hint">${print?"Vista previa con tu diseño. El acabado final puede variar ligeramente.":"Sube tu diseño y mira cómo queda."}</small>
         ${p.photo && html`<div class="cz-photo"><${Photo} src=${p.photo} alt=${"Foto de "+p.name} fallback=${null}/><span>Foto real del producto</span></div>`}
       </div>
@@ -390,7 +397,7 @@ function CustomPage({p, onOpen}){
               <button aria-pressed=${cover} onClick=${()=>setMode(true)}>Todo el producto</button>
               <button aria-pressed=${!cover} onClick=${()=>setMode(false)}>Solo un logo</button></div>`}
             ${slider(cover?"Zoom":"Tamaño","s",cover?1:0.3,cover?3:1.6,0.05)}${slider("Horizontal","x",-0.5,0.5,0.02)}${slider("Vertical","y",-0.5,0.5,0.02)}
-            <div style=${{display:"flex",gap:8}}><button class="btn" onClick=${()=>setPos(start(cover))}>Centrar</button><button class="btn" onClick=${()=>{ setPrint(null); setModel(null); }}>Quitar diseño</button></div>
+            <div style=${{display:"flex",gap:8}}><button class="btn" onClick=${()=>setPos(start(cover))}>Centrar</button><button class="btn" onClick=${()=>{ setPrint(null); setModel(null); cur.current=null; }}>Quitar diseño</button></div>
           </div>`}
         </div>
         ${p.options && p.options.values.length>0 && html`<div class="field">${p.options.label}<div class="chips">${p.options.values.map(v=>html`<button key=${v} aria-pressed=${v===opt} onClick=${()=>setOpt(v)}>${v}</button>`)}</div></div>`}

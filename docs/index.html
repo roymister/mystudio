@@ -354,6 +354,12 @@ input[type=color]{width:40px;height:32px;border:1px solid var(--line);border-rad
 .models-in .mi-acts{display:flex;justify-content:space-between;gap:2px}
 .models-in .mi-acts .btn{padding:2px 8px;min-width:0}
 .models-in .mi.add{align-items:center;justify-content:center;aspect-ratio:1;border:1.5px dashed var(--line);color:var(--primary);cursor:pointer;text-align:center;font-weight:700}
+/* flechas para cambiar de modelo */
+.cz-view{position:relative;width:100%;display:flex;justify-content:center}
+.cz-arrow{position:absolute;top:50%;transform:translateY(-50%);z-index:2;width:44px;height:44px;border-radius:999px;border:1px solid var(--line);background:#fff;color:var(--ink);font-size:28px;line-height:1;cursor:pointer;box-shadow:0 4px 14px rgba(27,34,50,.12);display:grid;place-items:center;padding:0 0 4px}
+.cz-arrow:hover{color:var(--primary);border-color:var(--primary)}
+.cz-arrow.prev{left:0}.cz-arrow.next{right:0}
+.cz-count{font-size:12.5px;font-weight:700;color:var(--ink);background:#fff;border:1px solid var(--line);border-radius:999px;padding:4px 12px}
 
 .sim .app{display:grid;gap:16px;max-width:1360px;margin:0 auto;grid-template-columns:1fr}
 @media (min-width:1000px){.sim .app{grid-template-columns:250px minmax(0,1fr) 300px}}
@@ -1380,9 +1386,11 @@ function CustomPage({p, onOpen}){
   const setMode = c => { setCover(c); setPos(start(c)); };
   const models = (p.models||[]).filter(Boolean);
   const [model,setModel] = useState(null);       // índice del modelo listo elegido (null = diseño propio)
-  const useModel = i => { setPrint(models[i]); setModel(i); setPos(start(cover)); setErr(""); };
+  const cur = useRef(null);                       // modelo actual al instante (clics rápidos en las flechas)
+  const useModel = i => { cur.current=i; setPrint(models[i]); setModel(i); setPos(start(cover)); setErr(""); };
+  const stepModel = d => { const n=models.length; if(!n) return; const c = cur.current==null ? (d>0?-1:0) : cur.current; useModel((c+d+n)%n); };
   const onFile = async e => { const f=e.target.files[0]; e.target.value=""; if(!f) return; setErr("");
-    try{ setPrint(await compressImage(f,900,0.85)); setModel(null); setPos(start(cover)); }catch(_){ setErr("No se pudo leer esa imagen. Prueba con un JPG o PNG."); } };
+    try{ setPrint(await compressImage(f,900,0.85)); setModel(null); cur.current=null; setPos(start(cover)); }catch(_){ setErr("No se pudo leer esa imagen. Prueba con un JPG o PNG."); } };
   const unit=finalPrice(p), cat=CATEGORIES.find(c=>c.id===p.cat);
   const artProps = {type:p.art, color:usesColor?color[1]:p.color, inner:p.inner, thermo:p.thermo, print, printPos:print?{...pos,full:cover}:null};
   const addToCart = () => {
@@ -1398,7 +1406,12 @@ function CustomPage({p, onOpen}){
     <${PageHead} title=${p.name} crumb=${html`${cat?html`<a href=${"#"+cat.id}>${cat.name}</a> / `:""}Personalizar`} text=${p.desc}/>
     <section class="section wrap"><div class="cz">
       <div class="cz-stage">
-        <div class="cz-art"><${ProductArt} ...${artProps}/></div>
+        <div class="cz-view">
+          ${models.length>1 && html`<button class="cz-arrow prev" onClick=${()=>stepModel(-1)} aria-label="Modelo anterior">‹</button>`}
+          <div class="cz-art"><${ProductArt} ...${artProps}/></div>
+          ${models.length>1 && html`<button class="cz-arrow next" onClick=${()=>stepModel(1)} aria-label="Modelo siguiente">›</button>`}
+        </div>
+        ${models.length>0 && html`<div class="cz-count">${model!=null&&print?`Modelo ${model+1} de ${models.length}`:`${models.length} modelo${models.length>1?"s":""} listo${models.length>1?"s":""} · usa las flechas`}</div>`}
         <small class="cz-hint">${print?"Vista previa con tu diseño. El acabado final puede variar ligeramente.":"Sube tu diseño y mira cómo queda."}</small>
         ${p.photo && html`<div class="cz-photo"><${Photo} src=${p.photo} alt=${"Foto de "+p.name} fallback=${null}/><span>Foto real del producto</span></div>`}
       </div>
@@ -1416,7 +1429,7 @@ function CustomPage({p, onOpen}){
               <button aria-pressed=${cover} onClick=${()=>setMode(true)}>Todo el producto</button>
               <button aria-pressed=${!cover} onClick=${()=>setMode(false)}>Solo un logo</button></div>`}
             ${slider(cover?"Zoom":"Tamaño","s",cover?1:0.3,cover?3:1.6,0.05)}${slider("Horizontal","x",-0.5,0.5,0.02)}${slider("Vertical","y",-0.5,0.5,0.02)}
-            <div style=${{display:"flex",gap:8}}><button class="btn" onClick=${()=>setPos(start(cover))}>Centrar</button><button class="btn" onClick=${()=>{ setPrint(null); setModel(null); }}>Quitar diseño</button></div>
+            <div style=${{display:"flex",gap:8}}><button class="btn" onClick=${()=>setPos(start(cover))}>Centrar</button><button class="btn" onClick=${()=>{ setPrint(null); setModel(null); cur.current=null; }}>Quitar diseño</button></div>
           </div>`}
         </div>
         ${p.options && p.options.values.length>0 && html`<div class="field">${p.options.label}<div class="chips">${p.options.values.map(v=>html`<button key=${v} aria-pressed=${v===opt} onClick=${()=>setOpt(v)}>${v}</button>`)}</div></div>`}
