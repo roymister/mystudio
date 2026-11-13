@@ -357,7 +357,9 @@ function CustomPage({p, onOpen}){
   const unit=finalPrice(p), cat=CATEGORIES.find(c=>c.id===p.cat);
   const artProps = {type:p.art, color:usesColor?color[1]:p.color, inner:p.inner, thermo:p.thermo, print, printPos:print?{...pos,full:cover}:null};
   const addToCart = () => {
-    const thumb = "data:image/svg+xml;charset=utf-8,"+encodeURIComponent(artMarkup(p.art, artProps));
+    // Como archivo de imagen, el SVG necesita xmlns (si no, el <img> del carrito sale roto)
+    const svg = artMarkup(p.art, artProps).replace("<svg ", '<svg xmlns="http://www.w3.org/2000/svg" width="240" height="240" ');
+    const thumb = "data:image/svg+xml;charset=utf-8,"+encodeURIComponent(svg);
     add({ id:p.id, name:p.name, unit, qty, art:p.art, color:artProps.color, inner:p.inner, thumb,
       detail:[usesColor && `Color: ${color[0]}`, opt && `${p.options.label}: ${opt}`, print?(cover?"diseño en todo el producto":"diseño como logo"):"diseño por WhatsApp", note && `Nota: ${note}`].filter(Boolean).join(" · ") });
   };
