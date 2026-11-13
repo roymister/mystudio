@@ -370,6 +370,20 @@ input[type=color]{width:40px;height:32px;border:1px solid var(--line);border-rad
 .cz-dot[aria-pressed="true"]{width:22px;background:var(--primary)}
 button.drop{background:#fff;width:100%;font:inherit;font-weight:700}
 @media (prefers-reduced-motion:reduce){.cz-track{transition:none}}
+/* ventana para ajustar fotos (Panel del dueño) */
+.crop-ov{z-index:100}
+.cropper{background:#fff;border-radius:18px;padding:18px;width:min(380px,100%);max-height:calc(100vh - 32px);overflow:auto;display:flex;flex-direction:column;gap:12px;align-items:center}
+.cropper header{display:flex;justify-content:space-between;align-items:center;align-self:stretch}
+.cropper h3{font-size:17px;margin:0}.cropper h3 small{font-size:12.5px;color:var(--muted);font-weight:600}
+.crop-frame{position:relative;overflow:hidden;border-radius:12px;background:#fff;border:1px solid var(--line);cursor:grab;touch-action:none;display:grid;place-items:center;max-width:100%}
+.crop-frame:active{cursor:grabbing}
+.crop-frame img{position:absolute;left:50%;top:50%;max-width:none;user-select:none;pointer-events:none}
+.crop-grid{position:absolute;inset:0;pointer-events:none;background:linear-gradient(to right,transparent 33.2%,rgba(255,255,255,.55) 33.3%,transparent 33.5%,transparent 66.5%,rgba(255,255,255,.55) 66.6%,transparent 66.8%),linear-gradient(to bottom,transparent 33.2%,rgba(255,255,255,.55) 33.3%,transparent 33.5%,transparent 66.5%,rgba(255,255,255,.55) 66.6%,transparent 66.8%);box-shadow:inset 0 0 0 2px rgba(59,63,216,.5)}
+.crop-tip{color:var(--muted);text-align:center}
+.cropper .cz-range{align-self:stretch}
+.crop-quick{display:flex;gap:8px}
+.crop-acts{display:flex;gap:8px;justify-content:flex-end;align-self:stretch;flex-wrap:wrap}
+.cropper .err{color:var(--pink);font-weight:600}
 
 .sim .app{display:grid;gap:16px;max-width:1360px;margin:0 auto;grid-template-columns:1fr}
 @media (min-width:1000px){.sim .app{grid-template-columns:250px minmax(0,1fr) 300px}}
@@ -1674,10 +1688,56 @@ const DRAFT_KEY="sublipro-draft-v1";
 const clone=o=>JSON.parse(JSON.stringify(o));
 
 function Field({label, children, hint}){ return html`<label class="af"><span>${label}</span>${children}${hint && html`<small>${hint}</small>`}</label>`; }
+
+/* Ventana para ajustar una foto antes de guardarla: vista previa cuadrada (como se verá en la tienda),
+   arrastrar para encuadrar, zoom, y "Ver completa" para no recortar (rellena con blanco). */
+function ImageCropper({file, title="Ajustar foto", size=900, quality=0.82, count, onDone, onSkip, onCancel}){
+  const F=300;                                            // tamaño del marco en pantalla (px)
+  const [img,setImg]=useState(null), [err,setErr]=useState("");
+  const [z,setZ]=useState(1), [o,setO]=useState({x:0,y:0});
+  const drag=useRef(null);
+  useEffect(()=>{ const u=URL.createObjectURL(file), im=new Image();
+    im.onload=()=>{ setImg(im); setZ(1); setO({x:0,y:0}); }; im.onerror=()=>setErr("No se pudo leer esa imagen. Prueba con un JPG o PNG.");
+    im.src=u; return ()=>URL.revokeObjectURL(u); },[file]);
+  useEffect(()=>{ const k=e=>{ if(e.key==="Escape") onCancel(); }; addEventListener("keydown",k); return ()=>removeEventListener("keydown",k); },[]);
+  const base = img ? Math.max(F/img.width, F/img.height) : 1;            // z=1: llena el cuadro
+  const fit  = img ? Math.min(F/img.width, F/img.height)/base : 1;       // z mínimo: foto completa
+  const s = base*z, w = img?img.width*s:0, h = img?img.height*s:0;
+  const clamp = (p,zz=z) => { if(!img) return p; const ww=img.width*base*zz, hh=img.height*base*zz;
+    const cx = ww>F ? Math.max(-(ww-F)/2, Math.min((ww-F)/2, p.x)) : 0, cy = hh>F ? Math.max(-(hh-F)/2, Math.min((hh-F)/2, p.y)) : 0; return {x:cx,y:cy}; };
+  const zoom = v => { setZ(v); setO(p=>clamp(p,v)); };
+  const down = e => { e.currentTarget.setPointerCapture(e.pointerId); drag.current={x:e.clientX-o.x, y:e.clientY-o.y}; };
+  const move = e => { if(drag.current) setO(clamp({x:e.clientX-drag.current.x, y:e.clientY-drag.current.y})); };
+  const up = () => { drag.current=null; };
+  const save = () => { const c=document.createElement("canvas"); c.width=c.height=size; const k=size/F, x=c.getContext("2d");
+    x.fillStyle="#fff"; x.fillRect(0,0,size,size); x.imageSmoothingQuality="high";
+    x.drawImage(img, (F/2+o.x-w/2)*k, (F/2+o.y-h/2)*k, w*k, h*k); onDone(c.toDataURL("image/jpeg",quality)); };
+  return html`<div class="overlay crop-ov" onClick=${e=>{ if(e.target===e.currentTarget) onCancel(); }}>
+    <div class="cropper" role="dialog" aria-modal="true" aria-label=${title}>
+      <header><h3>${title}${count?html` <small>${count}</small>`:""}</h3><button class="x" style=${{position:"static"}} onClick=${onCancel} aria-label="Cerrar">×</button></header>
+      ${err ? html`<p class="err">${err}</p>` : html`
+        <div class="crop-frame" style=${{width:F,height:F}} onPointerDown=${down} onPointerMove=${move} onPointerUp=${up} onPointerCancel=${up}>
+          ${img && html`<img src=${img.src} alt="" draggable="false" style=${{width:w,height:h,transform:`translate(-50%,-50%) translate(${o.x}px,${o.y}px)`}}/>`}
+          <div class="crop-grid" aria-hidden="true"></div>
+        </div>
+        <small class="crop-tip">Arrastra la foto para encuadrarla. Así se verá en la tienda.</small>
+        <label class="cz-range"><span>Zoom</span><input type="range" min=${fit.toFixed(3)} max="4" step="0.01" value=${z} onInput=${e=>zoom(+e.target.value)}/></label>
+        <div class="crop-quick">
+          <button class="btn sm" onClick=${()=>{ setZ(fit); setO({x:0,y:0}); }}>Ver completa</button>
+          <button class="btn sm" onClick=${()=>{ setZ(1); setO({x:0,y:0}); }}>Llenar el cuadro</button>
+        </div>`}
+      <div class="crop-acts">
+        ${onSkip && html`<button class="btn" onClick=${onSkip}>Omitir esta</button>`}
+        <button class="btn" onClick=${onCancel}>Cancelar</button>
+        <button class="btn primary" disabled=${!img} onClick=${save}>Usar foto</button>
+      </div>
+    </div></div>`;
+}
+
 function PhotoInput({value, onChange, label="Foto"}){
   const [busy,setBusy]=useState(false), [err,setErr]=useState(""), [showUrl,setShowUrl]=useState(false), [url,setUrl]=useState("");
-  const pick=async e=>{ const f=e.target.files[0]; e.target.value=""; if(!f) return; setBusy(true); setErr("");
-    try{ onChange(await compressImage(f)); }catch(_){ setErr("No se pudo leer esa imagen. Prueba con un JPG o PNG."); } setBusy(false); };
+  const [file,setFile]=useState(null);
+  const pick=e=>{ const f=e.target.files[0]; e.target.value=""; if(!f) return; setErr(""); setFile(f); };
   return html`<div class="af"><span>${label}</span><div class="photo-in">
     <div class="pv">${value?html`<${Photo} src=${value} fallback=${html`<small>No carga</small>`}/>`:html`<small>Sin foto</small>`}</div>
     <div style=${{display:"flex",flexDirection:"column",gap:6}}>
@@ -1686,19 +1746,22 @@ function PhotoInput({value, onChange, label="Foto"}){
       ${value && html`<button class="btn" onClick=${()=>onChange(null)}>Quitar foto</button>`}
     </div></div>
     ${showUrl && html`<div class="two"><input class="input" placeholder="https://… (enlace directo a la imagen)" value=${url} onInput=${e=>setUrl(e.target.value)}/><button class="btn" onClick=${()=>{ if(/^https:\/\/\S+$/.test(url.trim())){ onChange(url.trim()); setShowUrl(false); setUrl(""); setErr(""); } else setErr("Pega un enlace que empiece con https://"); }}>Usar enlace</button></div>`}
-    ${err && html`<small class="err">${err}</small>`}</div>`;
+    ${err && html`<small class="err">${err}</small>`}
+    ${file && html`<${ImageCropper} file=${file} title="Ajustar foto del producto" onDone=${d=>{ onChange(d); setFile(null); }} onCancel=${()=>setFile(null)}/>`}</div>`;
 }
-/* Modelos listos: diseños ya hechos que el cliente puede elegir en la página del producto */
+/* Modelos listos: fotos de trabajos ya hechos que el cliente ve en un carrusel */
 const MAX_MODELS=8;
 function ModelsInput({value, onChange}){
   const list=value||[];
-  const [busy,setBusy]=useState(false), [err,setErr]=useState("");
-  const pick=async e=>{ const files=[...e.target.files]; e.target.value=""; if(!files.length) return;
+  const [err,setErr]=useState(""), [queue,setQueue]=useState([]), [total,setTotal]=useState(0);
+  const pick=e=>{ const files=[...e.target.files]; e.target.value=""; if(!files.length) return;
     const room=MAX_MODELS-list.length; if(room<=0){ setErr(`Máximo ${MAX_MODELS} modelos por producto.`); return; }
-    setBusy(true); setErr(""); const out=[];
-    for(const f of files.slice(0,room)){ try{ out.push(await compressImage(f,700,0.78)); }catch(_){ setErr("Alguna imagen no se pudo leer. Prueba con JPG o PNG."); } }
-    if(files.length>room) setErr(`Solo se agregaron ${room}: el máximo es ${MAX_MODELS} modelos por producto.`);
-    onChange([...list,...out]); setBusy(false); };
+    setErr(files.length>room?`Solo se agregarán ${room}: el máximo es ${MAX_MODELS} modelos por producto.`:"");
+    const q=files.slice(0,room); setQueue(q); setTotal(q.length); };
+  // Cada foto pasa por la ventana de ajuste, una tras otra
+  const listRef=useRef(list); listRef.current=list;
+  const next=()=>setQueue(q=>q.slice(1));
+  const done=d=>{ onChange([...listRef.current,d]); next(); };
   const move=(i,d)=>{ const n=[...list], j=i+d; if(j<0||j>=n.length) return; [n[i],n[j]]=[n[j],n[i]]; onChange(n); };
   return html`<div class="af"><span>Modelos listos (fotos de trabajos ya hechos que el cliente puede elegir)</span>
     <div class="models-in">
@@ -1706,10 +1769,12 @@ function ModelsInput({value, onChange}){
         <div class="mi-acts"><button class="btn sm" onClick=${()=>move(i,-1)} disabled=${i===0} aria-label="Mover a la izquierda">←</button>
           <button class="btn danger sm" onClick=${()=>onChange(list.filter((_,k)=>k!==i))} aria-label="Quitar modelo">×</button>
           <button class="btn sm" onClick=${()=>move(i,1)} disabled=${i===list.length-1} aria-label="Mover a la derecha">→</button></div></div>`)}
-      ${list.length<MAX_MODELS && html`<label class="mi add">${busy?"Procesando…":"+ Agregar fotos"}<input type="file" accept="image/*" multiple onChange=${pick} hidden/></label>`}
+      ${list.length<MAX_MODELS && html`<label class="mi add">+ Agregar fotos<input type="file" accept="image/*" multiple onChange=${pick} hidden/></label>`}
     </div>
-    <small>${list.length}/${MAX_MODELS} · Puedes elegir varias fotos a la vez. Sube fotos del producto ya terminado; el cliente las ve en un carrusel.</small>
-    ${err && html`<small class="err">${err}</small>`}</div>`;
+    <small>${list.length}/${MAX_MODELS} · Puedes elegir varias fotos a la vez; cada una se abre para ajustarla. El cliente las ve en un carrusel.</small>
+    ${err && html`<small class="err">${err}</small>`}
+    ${queue.length>0 && html`<${ImageCropper} key=${total-queue.length} file=${queue[0]} size=${700} quality=${0.8} title="Ajustar modelo"
+      count=${total>1?`${total-queue.length+1} de ${total}`:""} onDone=${done} onSkip=${total>1?next:null} onCancel=${()=>setQueue([])}/>`}</div>`;
 }
 function ConfirmButton({label="Eliminar", ask="¿Eliminar?", onYes}){
   const [c,setC]=useState(false);
