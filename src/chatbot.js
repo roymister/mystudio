@@ -66,7 +66,7 @@ function botFindProducts(t){
 function botAnswer(text){
   const c=botCfg(), t=botNorm(text), short=t.trim().split(" ").length<=4;
   if(!t.trim()) return null;
-  if(short && /^ (hola|holi|buenas|buenos|buen dia|hey|saludos|que tal|alo) /.test(t)) return {text:botFill(c.greeting)};
+  if(short && /^ (hola|holi|buenas|buenos|buen dia|hey|saludos|que tal|alo) /.test(t)) return {text:botFill(c.greeting), menu:true};
   if(/ (gracias|muchas gracias|te agradezco|thank) /.test(t)) return {text:"¡Con gusto! Si necesitas algo más, aquí estoy."};
   if(/ (asesor|asesora|humano|persona|whatsapp|wsp|wasap|llamar|llamada|telefono|celular|hablar con|atencion al cliente) /.test(t))
     return {text:"¡Claro! Un asesor te atiende por WhatsApp. Toca el botón y escríbenos:", action:"wa"};
@@ -78,7 +78,7 @@ function botAnswer(text){
   if(faq) return {text:botFill(faq.a), action:faq.action||""};
   if(best>=2) return botProducts(found);
   if(priceAsk) return botPrices();
-  return {text:"No estoy seguro de haber entendido 🤔. Prueba con otras palabras o toca una de las opciones de abajo. Si prefieres, un asesor te ayuda por WhatsApp.", action:"wa"};
+  return {text:"No estoy seguro de haber entendido 🤔. Prueba con otras palabras o elige una de estas opciones:", menu:true};
 }
 function botProducts(found){
   // Si algún nombre coincide (puntaje ≥ 2), solo se muestran esos; si no, los que coinciden por descripción o categoría
@@ -136,6 +136,27 @@ function BotProducts({ids, onOpen, close}){
   </div>`)}</div>`;
 }
 
+/* Menú de opciones que se despliega junto al mensaje del bot */
+function BotMenu({items, startOpen, disabled, onPick}){
+  const [open,setOpen]=useState(!!startOpen), [more,setMore]=useState(false);
+  const box=useRef(null), touched=useRef(false);
+  // Al desplegar (por el cliente), el chat se desplaza para mostrar las opciones
+  useEffect(()=>{ if(touched.current && box.current) box.current.scrollIntoView({block:"nearest", behavior:"smooth"}); },[open,more]);
+  const toggle = f => v => { touched.current=true; f(v); };
+  const main=items.filter(x=>x.main), rest=items.filter(x=>!x.main);
+  if(!open) return html`<button class="bot-more" onClick=${()=>toggle(setOpen)(true)} aria-expanded="false">Ver más opciones <span aria-hidden="true">▾</span></button>`;
+  const row=(it,i)=>html`<button key=${it.label} class="bm-opt" style=${{animationDelay:(i*35)+"ms"}} disabled=${disabled} onClick=${()=>onPick(it)}>
+    <span class="bm-ic" aria-hidden="true">${it.icon}</span><span class="bm-lb">${it.label}</span><span class="bm-ch" aria-hidden="true">›</span></button>`;
+  return html`<div class="bot-menu" role="group" aria-label="Opciones" ref=${box}>
+    ${main.map(row)}
+    ${more && rest.map((it,i)=>row(it,main.length+i))}
+    <div class="bm-foot">
+      ${rest.length>0 && html`<button class="bm-link" onClick=${()=>toggle(setMore)(!more)} aria-expanded=${more}>${more?"Menos preguntas ▴":`Más preguntas (${rest.length}) ▾`}</button>`}
+      ${!startOpen && html`<button class="bm-link" onClick=${()=>setOpen(false)}>Ocultar</button>`}
+    </div>
+  </div>`;
+}
+
 function ChatBot({onOpen}){
   const c=botCfg();
   const [open,setOpen]=useState(false), [msgs,setMsgs]=useState(BOT_LOG), [typing,setTyping]=useState(false);
@@ -144,15 +165,18 @@ function ChatBot({onOpen}){
   const push = m => setMsgs(prev=>{ const n=[...prev,{id:++botMsgId,...m}]; BOT_LOG=n; return n; });
   const reply = make => { setTyping(true); clearTimeout(timer.current);
     timer.current=setTimeout(()=>{ setTyping(false); const r=make(); if(r) push({from:"bot",...r}); }, 600+Math.random()*800); };
-  const chips = [
-    ...c.faqs.slice(0,5).map((f,i)=>({label:f.q, run:()=>({text:botFill(f.a), action:f.action||""})})),
-    {label:"Ver precios", run:botPrices},
-    {label:"Hablar con un asesor", run:()=>({text:"¡Claro! Un asesor te atiende por WhatsApp. Toca el botón y escríbenos:", action:"wa"})},
+  // Opciones: las 5 primeras preguntas + precios + asesor; el resto en "Más preguntas"
+  const FAQ_ICONS={wa:"💬",cotizador:"🧮","3d":"🧊",catalogo:"🛍️"};
+  const menuItems = [
+    ...c.faqs.map((f,i)=>({label:f.q, main:i<5, icon:FAQ_ICONS[f.action]||"❓", run:()=>({text:botFill(f.a), action:f.action||""})})),
+    {label:"Ver precios", main:true, icon:"🏷️", run:botPrices},
+    {label:"Hablar con un asesor", main:true, icon:"👤", run:()=>({text:"¡Claro! Un asesor te atiende por WhatsApp. Toca el botón y escríbenos:", action:"wa"})},
   ];
-  const openChat = () => { setOpen(true); setTeaser(false); if(!BOT_LOG.length) reply(()=>({text:botFill(c.greeting)})); };
+  const openChat = () => { setOpen(true); setTeaser(false); if(!BOT_LOG.length) reply(()=>({text:botFill(c.greeting), menu:true})); };
   const close = () => setOpen(false);
   const send = e => { e && e.preventDefault(); const t=input.trim(); if(!t) return; setInput(""); push({from:"user",text:t}); reply(()=>botAnswer(t)); };
-  const chip = ch => { push({from:"user",text:ch.label}); reply(ch.run); };
+  const pick = it => { push({from:"user",text:it.label}); reply(it.run); };
+  const lastBot = (()=>{ for(let i=msgs.length-1;i>=0;i--) if(msgs[i].from==="bot") return msgs[i].id; return null; })();
   // Burbuja de saludo a los 6 s (una vez por sesión)
   useEffect(()=>{ if(!c.teaser) return; let seen=false; try{ seen=!!sessionStorage.getItem(TEASER_KEY); }catch(e){}
     if(seen) return; const t=setTimeout(()=>{ setTeaser(true); try{ sessionStorage.setItem(TEASER_KEY,"1"); }catch(e){} },6000); return ()=>clearTimeout(t); },[]);
@@ -174,12 +198,12 @@ function ChatBot({onOpen}){
           ? html`<div class="bot-msg from-bot" key=${m.id}><span class="bm-av"><${Mascot} size=${26}/></span>
               <div class="bm-body"><div class="bubble">${m.text}</div>
                 ${m.products && html`<${BotProducts} ids=${m.products} onOpen=${onOpen} close=${close}/>`}
-                <${BotAction} action=${m.action} close=${close}/></div></div>`
+                <${BotAction} action=${m.action} close=${close}/>
+                ${m.id===lastBot && !typing && html`<${BotMenu} key=${"menu"+m.id} items=${menuItems} startOpen=${!!m.menu} onPick=${pick}/>`}</div></div>`
           : html`<div class="bot-msg from-user" key=${m.id}><div class="bubble">${m.text}</div></div>`)}
         ${typing && html`<div class="bot-msg from-bot"><span class="bm-av"><${Mascot} size=${26} mood="think"/></span>
           <div class="bubble typing" aria-label="escribiendo"><i></i><i></i><i></i></div></div>`}
       </div>
-      <div class="bot-chips">${chips.map((ch,i)=>html`<button key=${i} onClick=${()=>chip(ch)} disabled=${typing}>${ch.label}</button>`)}</div>
       <form class="bot-input" onSubmit=${send}>
         <input ref=${inputRef} value=${input} onInput=${e=>setInput(e.target.value)} placeholder="Escribe tu pregunta…" aria-label="Escribe tu pregunta" maxlength="300"/>
         <button type="submit" disabled=${!input.trim()} aria-label="Enviar"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 2 11 13"/><path d="M22 2 15 22l-4-9-9-4z"/></svg></button>
