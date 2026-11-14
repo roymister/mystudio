@@ -3,7 +3,7 @@
 .bot-root > *{pointer-events:auto}
 
 /* botón flotante */
-.bot-fab{width:64px;height:64px;border-radius:999px;border:0;cursor:pointer;background:#fff;box-shadow:0 10px 28px rgba(30,38,56,.22),0 0 0 3px rgba(59,63,216,.12);display:grid;place-items:center;padding:0;transition:transform .2s,box-shadow .2s}
+.bot-fab{width:74px;height:74px;border-radius:999px;border:0;cursor:pointer;background:#fff;box-shadow:0 10px 28px rgba(30,38,56,.22),0 0 0 3px rgba(59,63,216,.12);display:grid;place-items:center;padding:0;transition:transform .2s,box-shadow .2s}
 .bot-fab:hover{transform:translateY(-2px);box-shadow:0 14px 32px rgba(30,38,56,.28),0 0 0 3px rgba(59,63,216,.22)}
 .bf-m{display:grid;place-items:center;animation:tinti-float 3.2s ease-in-out infinite}
 @keyframes tinti-float{0%,100%{transform:translateY(0)}50%{transform:translateY(-4px)}}
@@ -71,7 +71,7 @@
 /* celular: panel casi a pantalla completa */
 @media (max-width:520px){
   .bot-root{right:calc(12px + env(safe-area-inset-right,0px));bottom:calc(12px + env(safe-area-inset-bottom,0px))}
-  .bot-fab{width:58px;height:58px}
+  .bot-fab{width:68px;height:68px}.bot-fab .mascot{width:52px;height:52px}
   .bot-root.is-open .bot-fab{display:none}
   .bot-panel{position:fixed;left:8px;right:8px;top:calc(8px + env(safe-area-inset-top,0px));bottom:calc(8px + env(safe-area-inset-bottom,0px));width:auto;height:auto;border-radius:18px}
   .bot-input input{font-size:16px}

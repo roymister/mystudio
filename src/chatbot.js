@@ -190,7 +190,7 @@ function ChatBot({onOpen}){
       <button class="bt-txt" onClick=${openChat}>¡Hola! Soy ${c.name} 👋 ¿Te ayudo con tu pedido?</button>
       <button class="bt-x" onClick=${()=>setTeaser(false)} aria-label="Cerrar saludo">×</button></div>`}
     ${open && html`<section class="bot-panel" role="dialog" aria-label=${"Asistente "+c.name}>
-      <header class="bot-head"><${Mascot} size=${40} mood=${typing?"think":"happy"}/>
+      <header class="bot-head"><${Mascot} size=${46} mood=${typing?"think":"happy"}/>
         <div class="bh-txt"><b>${c.name}</b><small>Asistente de ${CONFIG.name} · responde al instante</small></div>
         <button class="bh-x" onClick=${close} aria-label="Cerrar asistente">×</button></header>
       <div class="bot-msgs" ref=${listRef} aria-live="polite">
@@ -210,6 +210,6 @@ function ChatBot({onOpen}){
       </form>
     </section>`}
     <button class="bot-fab" onClick=${()=>open?close():openChat()} aria-label=${open?"Cerrar asistente":"Abrir asistente "+c.name} aria-expanded=${open}>
-      <span class="bf-m"><${Mascot} size=${46}/></span></button>
+      <span class="bf-m"><${Mascot} size=${58}/></span></button>
   </div>`;
 }
